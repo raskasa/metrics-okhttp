@@ -22,6 +22,8 @@ import org.junit.Test;
 import static org.assertj.core.api.StrictAssertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+// TODO: Validate that when an OkHttpClient is cloned, the clone's usage is tracked as well.
+
 public final class InstrumentedOkHttpClientTest {
   @Test public void equality() throws Exception {
     MetricRegistry registry = mock(MetricRegistry.class);
