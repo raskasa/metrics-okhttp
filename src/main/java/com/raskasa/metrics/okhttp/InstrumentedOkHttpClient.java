@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
-// TODO: Add code comments for the registration of each metric.
+// TODO: Add class-level Javadoc.
 
 public final class InstrumentedOkHttpClient extends OkHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(InstrumentedOkHttpClient.class);
@@ -117,6 +117,29 @@ public final class InstrumentedOkHttpClient extends OkHttpClient {
     registry.register(name(OkHttpClient.class, "connection-pool-multiplexed-connection-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return client.getConnectionPool().getMultiplexedConnectionCount();
+      }
+    });
+
+    // Instrument the internal dispatcher (which sets policy on when async requests are executed).
+
+    registry.register(name(OkHttpClient.class, "dispatcher-max-requests"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getDispatcher().getMaxRequests();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "dispatcher-max-requests-per-host"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getDispatcher().getMaxRequestsPerHost();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "dispatcher-queued-call-count"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getDispatcher().getQueuedCallCount();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "dispatcher-running-call-count"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getDispatcher().getRunningCallCount();
       }
     });
   }

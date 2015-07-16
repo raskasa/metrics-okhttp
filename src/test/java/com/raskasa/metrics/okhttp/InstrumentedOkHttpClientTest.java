@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 // TODO: Validate that when an OkHttpClient is cloned, the clone's usage is tracked as well.
 // TODO: Add tests for instrumentation of the HTTP cache.
 // TODO: Add tests for instrumentation of the connection pool.
+// TODO: Add tests for instrumentation of internal dispatcher.
 
 public final class InstrumentedOkHttpClientTest {
   @Test public void equality() throws Exception {
