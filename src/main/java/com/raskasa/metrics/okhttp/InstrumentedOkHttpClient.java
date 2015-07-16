@@ -101,6 +101,24 @@ public final class InstrumentedOkHttpClient extends OkHttpClient {
         return Ratio.of(currentCacheSize.getValue(), maxCacheSize.getValue());
       }
     });
+
+    // Instrument the connection pool.
+
+    registry.register(name(OkHttpClient.class, "connection-pool-connection-count"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getConnectionPool().getConnectionCount();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "connection-pool-http-connection-count"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getConnectionPool().getHttpConnectionCount();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "connection-pool-multiplexed-connection-count"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getConnectionPool().getMultiplexedConnectionCount();
+      }
+    });
   }
 
   @Override public void setConnectTimeout(long timeout, TimeUnit unit) {
