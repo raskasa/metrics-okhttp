@@ -48,7 +48,7 @@ import static com.codahale.metrics.MetricRegistry.name;
 // TODO: Inherit Javadoc from from all overridden methods.
 // TODO: Refactor constructor to make the logic easier to follow.
 
-public final class InstrumentedOkHttpClient extends OkHttpClient {
+final class InstrumentedOkHttpClient extends OkHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(InstrumentedOkHttpClient.class);
   private final OkHttpClient client;
 
