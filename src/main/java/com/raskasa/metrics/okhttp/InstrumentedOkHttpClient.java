@@ -16,6 +16,7 @@
 package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.Gauge;
+import com.codahale.metrics.InstrumentedExecutorService;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.RatioGauge;
 import com.squareup.okhttp.Authenticator;
@@ -44,6 +45,8 @@ import org.slf4j.LoggerFactory;
 import static com.codahale.metrics.MetricRegistry.name;
 
 // TODO: Add class-level Javadoc.
+// TODO: Inherit Javadoc from from all overridden methods.
+// TODO: Refactor constructor to make the logic easier to follow.
 
 public final class InstrumentedOkHttpClient extends OkHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(InstrumentedOkHttpClient.class);
@@ -132,16 +135,23 @@ public final class InstrumentedOkHttpClient extends OkHttpClient {
         return client.getDispatcher().getMaxRequestsPerHost();
       }
     });
-    registry.register(name(OkHttpClient.class, "dispatcher-queued-call-count"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getQueuedCallCount();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "dispatcher-running-call-count"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getRunningCallCount();
-      }
-    });
+    registry.register(name(OkHttpClient.class, "dispatcher-queued-call-count"),
+        new Gauge<Integer>() {
+          @Override public Integer getValue() {
+            return client.getDispatcher().getQueuedCallCount();
+          }
+        });
+    registry.register(name(OkHttpClient.class, "dispatcher-running-call-count"),
+        new Gauge<Integer>() {
+          @Override public Integer getValue() {
+            return client.getDispatcher().getRunningCallCount();
+          }
+        });
+    InstrumentedExecutorService executorService = new InstrumentedExecutorService(
+        client.getDispatcher().getExecutorService(),
+        registry,
+        OkHttpClient.class.getName());
+    client.setDispatcher(new Dispatcher(executorService));
   }
 
   @Override public void setConnectTimeout(long timeout, TimeUnit unit) {
