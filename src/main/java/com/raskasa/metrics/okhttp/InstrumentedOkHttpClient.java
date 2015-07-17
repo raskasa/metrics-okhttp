@@ -135,14 +135,12 @@ public final class InstrumentedOkHttpClient extends OkHttpClient {
         return client.getDispatcher().getMaxRequestsPerHost();
       }
     });
-    registry.register(name(OkHttpClient.class, "dispatcher-queued-call-count"),
-        new Gauge<Integer>() {
+    registry.register(name(OkHttpClient.class, "dispatcher-queued-call-count"), new Gauge<Integer>() {
           @Override public Integer getValue() {
             return client.getDispatcher().getQueuedCallCount();
           }
         });
-    registry.register(name(OkHttpClient.class, "dispatcher-running-call-count"),
-        new Gauge<Integer>() {
+    registry.register(name(OkHttpClient.class, "dispatcher-running-call-count"), new Gauge<Integer>() {
           @Override public Integer getValue() {
             return client.getDispatcher().getRunningCallCount();
           }
