@@ -17,6 +17,7 @@ package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.MetricRegistry;
 import com.squareup.okhttp.Cache;
+import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -31,6 +32,7 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -90,6 +92,55 @@ public final class InstrumentedOkHttpClientTest {
         .isEqualTo(rawClient.getCache().getSize());
 
     response.body().close();
+    server.shutdown();
+  }
+
+  @Ignore
+  @Test public void connectionPoolIsInstrumented() throws Exception {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("one"));
+    server.enqueue(new MockResponse().setBody("two"));
+    server.start();
+    URL baseUrl = server.getUrl("/");
+
+    MetricRegistry registry = new MetricRegistry();
+    OkHttpClient rawClient = new OkHttpClient();
+    rawClient.setConnectionPool(ConnectionPool.getDefault());
+    OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
+
+    assertThat(registry.getGauges()
+        .get(OkHttpClient.class.getName() + ".connection-pool-count")
+        .getValue())
+        .isEqualTo(0);
+    assertThat(registry.getGauges()
+        .get(OkHttpClient.class.getName() + ".connection-pool-count-http")
+        .getValue())
+        .isEqualTo(0);
+    assertThat(registry.getGauges()
+        .get(OkHttpClient.class.getName()+".connection-pool-count-multiplexed")
+        .getValue())
+        .isEqualTo(0);
+
+    Request req1 = new Request.Builder().url(baseUrl).build();
+    Request req2 = new Request.Builder().url(baseUrl).build();
+    Response resp1 = client.newCall(req1).execute();
+    Response resp2 = client.newCall(req2).execute();
+
+    assertThat(registry.getGauges()
+        .get(OkHttpClient.class.getName() + ".connection-pool-count")
+        .getValue())
+        .isEqualTo(1);
+    assertThat(registry.getGauges()
+        .get(OkHttpClient.class.getName() + ".connection-pool-count-http")
+        .getValue())
+        .isEqualTo(1);
+    assertThat(registry.getGauges()
+        .get(OkHttpClient.class.getName()+".connection-pool-count-multiplexed")
+        .getValue())
+        .isEqualTo(0);
+
+    resp1.body().close();
+    resp2.body().close();
     server.shutdown();
   }
 
