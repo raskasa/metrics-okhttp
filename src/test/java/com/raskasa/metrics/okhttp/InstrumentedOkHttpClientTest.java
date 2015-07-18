@@ -17,6 +17,8 @@ package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.MetricRegistry;
 import com.squareup.okhttp.OkHttpClient;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.assertj.core.api.StrictAssertions.assertThat;
@@ -28,17 +30,28 @@ import static org.mockito.Mockito.mock;
 // TODO: Add tests for instrumentation of internal dispatcher.
 
 public final class InstrumentedOkHttpClientTest {
+  private MetricRegistry registry;
+
+  @Before public void setUp() throws Exception {
+    registry = mock(MetricRegistry.class);
+  }
+
+  @After public void tearDown() throws Exception {
+    registry = null;
+  }
+
+
   @Test public void equality() throws Exception {
-    MetricRegistry registry = mock(MetricRegistry.class);
     OkHttpClient client = new OkHttpClient();
     InstrumentedOkHttpClient iClientA = new InstrumentedOkHttpClient(registry, client);
     InstrumentedOkHttpClient iClientB = new InstrumentedOkHttpClient(registry, client);
 
     assertThat(iClientA).isEqualTo(iClientB);
+    assertThat(iClientA).isEqualTo(client);
+    assertThat(iClientB).isEqualTo(client);
   }
 
   @Test public void stringRepresentation() throws Exception {
-    MetricRegistry registry = mock(MetricRegistry.class);
     OkHttpClient client = new OkHttpClient();
     InstrumentedOkHttpClient iClient = new InstrumentedOkHttpClient(registry, client);
 

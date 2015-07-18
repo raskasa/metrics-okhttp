@@ -322,9 +322,9 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   @Override public boolean equals(Object obj) {
-    return
-        obj instanceof InstrumentedOkHttpClient
-        && client.equals(((InstrumentedOkHttpClient) obj).client);
+    return (obj instanceof InstrumentedOkHttpClient
+        && client.equals(((InstrumentedOkHttpClient) obj).client))
+        || client.equals(obj);
   }
 
   @Override public String toString() {
