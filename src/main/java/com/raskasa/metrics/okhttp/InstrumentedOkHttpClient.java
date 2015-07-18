@@ -16,7 +16,6 @@
 package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.Gauge;
-import com.codahale.metrics.InstrumentedExecutorService;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.RatioGauge;
 import com.squareup.okhttp.Authenticator;
@@ -59,6 +58,13 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentDispatcher() {
+    InstrumentedExecutorService executorService =
+        new InstrumentedExecutorService(client.getDispatcher().getExecutorService(),
+                                        registry,
+                                        OkHttpClient.class.getName());
+
+    client.setDispatcher(new Dispatcher(executorService));
+
     registry.register(name(OkHttpClient.class, "queued-network-requests"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return client.getDispatcher().getQueuedCallCount();
@@ -69,11 +75,6 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
         return client.getDispatcher().getRunningCallCount();
       }
     });
-    InstrumentedExecutorService executorService = new InstrumentedExecutorService(
-        client.getDispatcher().getExecutorService(),
-        registry,
-        OkHttpClient.class.getName());
-    client.setDispatcher(new Dispatcher(executorService));
   }
 
   private void instrumentConnectionPool() {
