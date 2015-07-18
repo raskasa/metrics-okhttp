@@ -16,7 +16,6 @@
 package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.Gauge;
-import com.codahale.metrics.InstrumentedExecutorService;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.RatioGauge;
 import com.squareup.okhttp.Authenticator;
@@ -44,18 +43,60 @@ import org.slf4j.LoggerFactory;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
-// TODO: Add class-level Javadoc.
-// TODO: Inherit Javadoc from from all overridden methods.
-// TODO: Refactor constructor to make the logic easier to follow.
-
+/** Wraps an {@code OkHttpClient} in order to provide statistics about it's internals. */
 final class InstrumentedOkHttpClient extends OkHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(InstrumentedOkHttpClient.class);
+  private final MetricRegistry registry;
   private final OkHttpClient client;
 
   public InstrumentedOkHttpClient(MetricRegistry registry, final OkHttpClient client) {
     this.client = client;
+    this.registry = registry;
+    instrumentHttpCache();
+    instrumentConnectionPool();
+    instrumentDispatcher();
+  }
 
-    // Instrument the HTTP cache.
+  private void instrumentDispatcher() {
+    InstrumentedExecutorService executorService =
+        new InstrumentedExecutorService(client.getDispatcher().getExecutorService(),
+                                        registry,
+                                        OkHttpClient.class.getName());
+
+    client.setDispatcher(new Dispatcher(executorService));
+
+    registry.register(name(OkHttpClient.class, "queued-network-requests"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getDispatcher().getQueuedCallCount();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "running-network-requests"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getDispatcher().getRunningCallCount();
+      }
+    });
+  }
+
+  private void instrumentConnectionPool() {
+    registry.register(name(OkHttpClient.class, "connection-pool-count"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getConnectionPool().getConnectionCount();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "connection-pool-count-http"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getConnectionPool().getHttpConnectionCount();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "connection-pool-count-multiplexed"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getConnectionPool().getMultiplexedConnectionCount();
+      }
+    });
+  }
+
+  private void instrumentHttpCache() {
+    if (getCache() == null) return;
 
     registry.register(name(OkHttpClient.class, "cache-request-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
@@ -104,52 +145,6 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
         return Ratio.of(currentCacheSize.getValue(), maxCacheSize.getValue());
       }
     });
-
-    // Instrument the connection pool.
-
-    registry.register(name(OkHttpClient.class, "connection-pool-connection-count"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getConnectionPool().getConnectionCount();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "connection-pool-http-connection-count"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getConnectionPool().getHttpConnectionCount();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "connection-pool-multiplexed-connection-count"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getConnectionPool().getMultiplexedConnectionCount();
-      }
-    });
-
-    // Instrument the internal dispatcher (which sets policy on when async requests are executed).
-
-    registry.register(name(OkHttpClient.class, "dispatcher-max-requests"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getMaxRequests();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "dispatcher-max-requests-per-host"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getMaxRequestsPerHost();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "dispatcher-queued-call-count"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getQueuedCallCount();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "dispatcher-running-call-count"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getRunningCallCount();
-      }
-    });
-    InstrumentedExecutorService executorService = new InstrumentedExecutorService(
-        client.getDispatcher().getExecutorService(),
-        registry,
-        OkHttpClient.class.getName());
-    client.setDispatcher(new Dispatcher(executorService));
   }
 
   @Override public void setConnectTimeout(long timeout, TimeUnit unit) {
