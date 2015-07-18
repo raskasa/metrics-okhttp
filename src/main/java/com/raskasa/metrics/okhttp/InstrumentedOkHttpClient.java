@@ -120,12 +120,11 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
         return client.getConnectionPool().getHttpConnectionCount();
       }
     });
-    registry.register(name(OkHttpClient.class, "connection-pool-count-multiplexed"),
-        new Gauge<Integer>() {
-          @Override public Integer getValue() {
-            return client.getConnectionPool().getMultiplexedConnectionCount();
-          }
-        });
+    registry.register(name(OkHttpClient.class, "connection-pool-count-multiplexed"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getConnectionPool().getMultiplexedConnectionCount();
+      }
+    });
   }
 
   private void instrumentDispatcher() {
