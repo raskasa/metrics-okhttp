@@ -17,6 +17,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- Compilation dependencies -->
+    <guava.version>18.0</guava.version>
     <java.version>1.7</java.version>
     <metrics.version>3.1.2</metrics.version>
     <mockito.version>1.10.19</mockito.version>
@@ -60,6 +61,12 @@
     </dependency>
 
     <!-- Test dependencies -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
