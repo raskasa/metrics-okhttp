@@ -110,6 +110,8 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentConnectionPool() {
+    if (getConnectionPool() == null) client.setConnectionPool(ConnectionPool.getDefault());
+
     registry.register(name(OkHttpClient.class, "connection-pool-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return client.getConnectionPool().getConnectionCount();
