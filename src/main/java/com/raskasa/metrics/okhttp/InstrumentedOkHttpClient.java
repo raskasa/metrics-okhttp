@@ -57,44 +57,6 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     instrumentDispatcher();
   }
 
-  private void instrumentDispatcher() {
-    InstrumentedExecutorService executorService =
-        new InstrumentedExecutorService(client.getDispatcher().getExecutorService(),
-                                        registry,
-                                        OkHttpClient.class.getName());
-
-    client.setDispatcher(new Dispatcher(executorService));
-
-    registry.register(name(OkHttpClient.class, "queued-network-requests"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getQueuedCallCount();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "running-network-requests"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getRunningCallCount();
-      }
-    });
-  }
-
-  private void instrumentConnectionPool() {
-    registry.register(name(OkHttpClient.class, "connection-pool-count"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getConnectionPool().getConnectionCount();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "connection-pool-count-http"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getConnectionPool().getHttpConnectionCount();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "connection-pool-count-multiplexed"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getConnectionPool().getMultiplexedConnectionCount();
-      }
-    });
-  }
-
   private void instrumentHttpCache() {
     if (getCache() == null) return;
 
@@ -143,6 +105,45 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     registry.register(name(OkHttpClient.class, "cache-size"), new RatioGauge() {
       @Override protected Ratio getRatio() {
         return Ratio.of(currentCacheSize.getValue(), maxCacheSize.getValue());
+      }
+    });
+  }
+
+  private void instrumentConnectionPool() {
+    registry.register(name(OkHttpClient.class, "connection-pool-count"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getConnectionPool().getConnectionCount();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "connection-pool-count-http"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getConnectionPool().getHttpConnectionCount();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "connection-pool-count-multiplexed"),
+        new Gauge<Integer>() {
+          @Override public Integer getValue() {
+            return client.getConnectionPool().getMultiplexedConnectionCount();
+          }
+        });
+  }
+
+  private void instrumentDispatcher() {
+    InstrumentedExecutorService executorService =
+        new InstrumentedExecutorService(client.getDispatcher().getExecutorService(),
+            registry,
+            OkHttpClient.class.getName());
+
+    client.setDispatcher(new Dispatcher(executorService));
+
+    registry.register(name(OkHttpClient.class, "queued-network-requests"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getDispatcher().getQueuedCallCount();
+      }
+    });
+    registry.register(name(OkHttpClient.class, "running-network-requests"), new Gauge<Integer>() {
+      @Override public Integer getValue() {
+        return client.getDispatcher().getRunningCallCount();
       }
     });
   }
