@@ -59,22 +59,12 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentDispatcher() {
-    registry.register(name(OkHttpClient.class, "dispatcher-max-requests"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getMaxRequests();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "dispatcher-max-requests-per-host"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getMaxRequestsPerHost();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "dispatcher-queued-call-count"), new Gauge<Integer>() {
+    registry.register(name(OkHttpClient.class, "queued-network-requests"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return client.getDispatcher().getQueuedCallCount();
       }
     });
-    registry.register(name(OkHttpClient.class, "dispatcher-running-call-count"), new Gauge<Integer>() {
+    registry.register(name(OkHttpClient.class, "running-network-requests"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return client.getDispatcher().getRunningCallCount();
       }
@@ -87,17 +77,17 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentConnectionPool() {
-    registry.register(name(OkHttpClient.class, "connection-pool-connection-count"), new Gauge<Integer>() {
+    registry.register(name(OkHttpClient.class, "connection-pool-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return client.getConnectionPool().getConnectionCount();
       }
     });
-    registry.register(name(OkHttpClient.class, "connection-pool-http-connection-count"), new Gauge<Integer>() {
+    registry.register(name(OkHttpClient.class, "connection-pool-count-http"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return client.getConnectionPool().getHttpConnectionCount();
       }
     });
-    registry.register(name(OkHttpClient.class, "connection-pool-multiplexed-connection-count"), new Gauge<Integer>() {
+    registry.register(name(OkHttpClient.class, "connection-pool-count-multiplexed"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return client.getConnectionPool().getMultiplexedConnectionCount();
       }
@@ -105,6 +95,8 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentHttpCache() {
+    if (getCache() == null) return;
+
     registry.register(name(OkHttpClient.class, "cache-request-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return client.getCache().getRequestCount();  // The number of HTTP requests issued since this cache was created.
