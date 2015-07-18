@@ -16,13 +16,17 @@
 package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.squareup.okhttp.Cache;
+import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.ConnectionPool;
+import com.squareup.okhttp.Dispatcher;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
+import java.io.IOException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -42,7 +46,6 @@ import static org.mockito.Mockito.mock;
 
 // TODO: Validate that when an OkHttpClient is cloned, the clone's usage is tracked as well.
 // TODO: Add tests for instrumentation of the connection pool.
-// TODO: Add tests for instrumentation of internal dispatcher.
 
 public final class InstrumentedOkHttpClientTest {
   private MetricRegistry registry;
@@ -144,6 +147,43 @@ public final class InstrumentedOkHttpClientTest {
     server.shutdown();
   }
 
+  @Test public void dispatcherIsInstrumented() throws Exception {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setBody("one"));
+    server.enqueue(new MockResponse().setBody("two"));
+    server.start();
+    URL baseUrl = server.getUrl("/");
+
+    MetricRegistry registry = new MetricRegistry();
+    OkHttpClient rawClient = new OkHttpClient();
+    rawClient.setDispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()));
+    rawClient.setConnectionPool(ConnectionPool.getDefault());
+    OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
+
+    assertThat(registry.getMeters()
+        .get(OkHttpClient.class.getName() + ".network-requests-submitted")
+        .getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters()
+        .get(OkHttpClient.class.getName() + ".network-requests-completed")
+        .getCount())
+        .isEqualTo(0);
+
+    Request req1 = new Request.Builder().url(baseUrl).build();
+    Request req2 = new Request.Builder().url(baseUrl).build();
+    client.newCall(req1).enqueue(new TestCallback());
+    client.newCall(req2).enqueue(new TestCallback());
+
+    assertThat(registry.getMeters()
+        .get(OkHttpClient.class.getName() + ".network-requests-submitted")
+        .getCount())
+        .isEqualTo(2);
+    assertThat(registry.getMeters()
+        .get(OkHttpClient.class.getName() + ".network-requests-completed")
+        .getCount())
+        .isEqualTo(2);
+  }
+
   @Test public void equality() throws Exception {
     OkHttpClient client = new OkHttpClient();
     InstrumentedOkHttpClient iClientA = new InstrumentedOkHttpClient(registry, client);
@@ -174,5 +214,14 @@ public final class InstrumentedOkHttpClientTest {
     DateFormat rfc1123 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
     rfc1123.setTimeZone(TimeZone.getTimeZone("GMT"));
     return rfc1123.format(date);
+  }
+
+  static final class TestCallback implements Callback {
+    @Override public void onFailure(Request request, IOException e) {
+    }
+
+    @Override public void onResponse(Response response) throws IOException {
+      response.body().close();
+    }
   }
 }
