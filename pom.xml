@@ -20,7 +20,7 @@
     <guava.version>18.0</guava.version>
     <java.version>1.7</java.version>
     <metrics.version>3.1.2</metrics.version>
-    <mockito.version>1.10.19</mockito.version>
+    <mockito.version>1.9.5</mockito.version>
     <okhttp.version>2.4.0</okhttp.version>
 
     <!-- Test dependencies -->
