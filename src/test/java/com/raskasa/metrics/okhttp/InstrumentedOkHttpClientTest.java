@@ -156,7 +156,7 @@ public final class InstrumentedOkHttpClientTest {
 
     MetricRegistry registry = new MetricRegistry();
     OkHttpClient rawClient = new OkHttpClient();
-    rawClient.setDispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()));
+    rawClient.setDispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()));  // Force the requests to execute on this unit tests thread.
     rawClient.setConnectionPool(ConnectionPool.getDefault());
     OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
 
@@ -216,7 +216,7 @@ public final class InstrumentedOkHttpClientTest {
     return rfc1123.format(date);
   }
 
-  static final class TestCallback implements Callback {
+  private static final class TestCallback implements Callback {
     @Override public void onFailure(Request request, IOException e) {
     }
 
