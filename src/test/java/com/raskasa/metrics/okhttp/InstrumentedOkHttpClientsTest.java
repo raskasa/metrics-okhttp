@@ -45,27 +45,27 @@ public final class InstrumentedOkHttpClientsTest {
   }
 
   @Test public void createWithClient() throws Exception {
-    OkHttpClient originalClient = new OkHttpClient();
-    OkHttpClient instrumentedClient = InstrumentedOkHttpClients.create(registry, originalClient);
+    OkHttpClient rawClient = new OkHttpClient();
+    OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
 
-    assertThat(instrumentedClient.getDispatcher()).isEqualTo(originalClient.getDispatcher());
-    assertThat(instrumentedClient.getProxy()).isEqualTo(originalClient.getProxy());
-    assertThat(instrumentedClient.getProtocols()).isEqualTo(originalClient.getProtocols());
-    assertThat(instrumentedClient.getConnectionSpecs()).isEqualTo(originalClient.getConnectionSpecs());
-    assertThat(instrumentedClient.getProxySelector()).isEqualTo(originalClient.getProxySelector());
-    assertThat(instrumentedClient.getCookieHandler()).isEqualTo(originalClient.getCookieHandler());
-    assertThat(instrumentedClient.getCache()).isEqualTo(originalClient.getCache());
-    assertThat(instrumentedClient.getSocketFactory()).isEqualTo(originalClient.getSocketFactory());
-    assertThat(instrumentedClient.getSslSocketFactory()).isEqualTo(originalClient.getSslSocketFactory());
-    assertThat(instrumentedClient.getHostnameVerifier()).isEqualTo(originalClient.getHostnameVerifier());
-    assertThat(instrumentedClient.getCertificatePinner()).isEqualTo(originalClient.getCertificatePinner());
-    assertThat(instrumentedClient.getAuthenticator()).isEqualTo(originalClient.getAuthenticator());
-    assertThat(instrumentedClient.getConnectionPool()).isEqualTo(originalClient.getConnectionPool());
-    assertThat(instrumentedClient.getFollowSslRedirects()).isEqualTo(originalClient.getFollowSslRedirects());
-    assertThat(instrumentedClient.getFollowRedirects()).isEqualTo(originalClient.getFollowRedirects());
-    assertThat(instrumentedClient.getRetryOnConnectionFailure()).isEqualTo(originalClient.getRetryOnConnectionFailure());
-    assertThat(instrumentedClient.getConnectTimeout()).isEqualTo(originalClient.getConnectTimeout());
-    assertThat(instrumentedClient.getReadTimeout()).isEqualTo(originalClient.getReadTimeout());
-    assertThat(instrumentedClient.getWriteTimeout()).isEqualTo(originalClient.getWriteTimeout());
+    assertThat(client.getDispatcher()).isEqualTo(rawClient.getDispatcher());
+    assertThat(client.getProxy()).isEqualTo(rawClient.getProxy());
+    assertThat(client.getProtocols()).isEqualTo(rawClient.getProtocols());
+    assertThat(client.getConnectionSpecs()).isEqualTo(rawClient.getConnectionSpecs());
+    assertThat(client.getProxySelector()).isEqualTo(rawClient.getProxySelector());
+    assertThat(client.getCookieHandler()).isEqualTo(rawClient.getCookieHandler());
+    assertThat(client.getCache()).isEqualTo(rawClient.getCache());
+    assertThat(client.getSocketFactory()).isEqualTo(rawClient.getSocketFactory());
+    assertThat(client.getSslSocketFactory()).isEqualTo(rawClient.getSslSocketFactory());
+    assertThat(client.getHostnameVerifier()).isEqualTo(rawClient.getHostnameVerifier());
+    assertThat(client.getCertificatePinner()).isEqualTo(rawClient.getCertificatePinner());
+    assertThat(client.getAuthenticator()).isEqualTo(rawClient.getAuthenticator());
+    assertThat(client.getConnectionPool()).isEqualTo(rawClient.getConnectionPool());
+    assertThat(client.getFollowSslRedirects()).isEqualTo(rawClient.getFollowSslRedirects());
+    assertThat(client.getFollowRedirects()).isEqualTo(rawClient.getFollowRedirects());
+    assertThat(client.getRetryOnConnectionFailure()).isEqualTo(rawClient.getRetryOnConnectionFailure());
+    assertThat(client.getConnectTimeout()).isEqualTo(rawClient.getConnectTimeout());
+    assertThat(client.getReadTimeout()).isEqualTo(rawClient.getReadTimeout());
+    assertThat(client.getWriteTimeout()).isEqualTo(rawClient.getWriteTimeout());
   }
 }
