@@ -4,6 +4,9 @@ jdk:
   - oraclejdk7
   - oraclejdk8
 
+after_success:
+  - .buildscript/deploy_snapshot.sh
+
 env:
   global:
     - secure: "feCisjPHzMJ5W2lF1hVxWt9RLBw5GoRvhfc/tHLk/Rc3UkPJuTeHhUxLcbKh7F4s3nzelCRa1reL04BxKUKo2GM19aIbJzk48l6h5BJFe1oDzqzHbfA/WGfgo+72BnAsfxEIFrB/Gpi+L0itko1Pz8mg8KqYUSqWnpJPMoz9grY="
