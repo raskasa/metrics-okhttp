@@ -6,9 +6,9 @@
   <artifactId>metrics-okhttp</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <name>Metrics OkHttp</name>
+  <name>Metrics Integration for OkHttp</name>
   <description>
-    A Square OkHttp Client wrapper providing Metrics instrumentation of connection pools, request
+    An OkHttp Client wrapper providing Metrics instrumentation of connection pools, request
     durations and rates, and other useful information.
   </description>
 
