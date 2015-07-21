@@ -1,13 +1,13 @@
 Metrics Integration for OkHttp
 ==============================
 
-An [OkHttp Client][okhttp] wrapper providing [Metrics][metrics] instrumentation of connection pools, 
+An [OkHttp][okhttp] HTTP client wrapper providing [Metrics][metrics] instrumentation of connection pools, 
 request durations and rates, and other useful information.
 
 Usage
 -----
 
-`metrics-okhttp` provides `InstrumentedOkHttpClients`, a static factory class for instrumenting 
+Metrics Integration for OkHttp provides `InstrumentedOkHttpClients`, a static factory class for instrumenting 
 OkHttp HTTP clients.
 
 You can create an instrumented `OkHttpClient` by doing the following:
