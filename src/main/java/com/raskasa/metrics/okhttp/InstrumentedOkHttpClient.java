@@ -54,7 +54,7 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     this.registry = registry;
     instrumentHttpCache();
     instrumentConnectionPool();
-    instrumentDispatcher();
+    instrumentExecutorService();
   }
 
   private void instrumentHttpCache() {
@@ -129,24 +129,13 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     });
   }
 
-  private void instrumentDispatcher() {
+  private void instrumentExecutorService() {
     InstrumentedExecutorService executorService =
         new InstrumentedExecutorService(client.getDispatcher().getExecutorService(),
             registry,
             OkHttpClient.class.getName());
 
     client.setDispatcher(new Dispatcher(executorService));
-
-    registry.register(name(OkHttpClient.class, "queued-network-requests"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getQueuedCallCount();
-      }
-    });
-    registry.register(name(OkHttpClient.class, "running-network-requests"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return client.getDispatcher().getRunningCallCount();
-      }
-    });
   }
 
   @Override public void setConnectTimeout(long timeout, TimeUnit unit) {

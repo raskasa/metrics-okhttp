@@ -148,7 +148,7 @@ public final class InstrumentedOkHttpClientTest {
     server.shutdown();
   }
 
-  @Test public void dispatcherIsInstrumented() throws Exception {
+  @Test public void executorServiceIsInstrumented() throws Exception {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
