@@ -5,4 +5,4 @@ CHANGELOG
 
 _In Development_
 
-* Initial code creation.
+Initial release.

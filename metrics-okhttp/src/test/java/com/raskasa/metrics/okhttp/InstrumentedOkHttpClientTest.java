@@ -41,20 +41,26 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import static org.assertj.core.api.StrictAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 // TODO: Add tests for instrumentation of the connection pool.
 
 public final class InstrumentedOkHttpClientTest {
+  private MetricRegistry mockRegistry;
   private MetricRegistry registry;
+  private OkHttpClient rawClient;
 
   @Before public void setUp() throws Exception {
-    registry = mock(MetricRegistry.class);
+    mockRegistry = mock(MetricRegistry.class);
+    registry = new MetricRegistry();
+    rawClient = new OkHttpClient();
   }
 
   @After public void tearDown() throws Exception {
+    mockRegistry = null;
     registry = null;
+    rawClient = null;
   }
 
   @Rule public TemporaryFolder cacheRule = new TemporaryFolder();
@@ -70,8 +76,6 @@ public final class InstrumentedOkHttpClientTest {
     server.start();
     URL baseUrl = server.getUrl("/");
 
-    MetricRegistry registry = new MetricRegistry();
-    OkHttpClient rawClient = new OkHttpClient();
     Cache cache = new Cache(cacheRule.getRoot(), Long.MAX_VALUE);
     rawClient.setCache(cache);
     OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
@@ -105,8 +109,6 @@ public final class InstrumentedOkHttpClientTest {
     server.start();
     URL baseUrl = server.getUrl("/");
 
-    MetricRegistry registry = new MetricRegistry();
-    OkHttpClient rawClient = new OkHttpClient();
     rawClient.setConnectionPool(ConnectionPool.getDefault());
     OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
 
@@ -146,15 +148,13 @@ public final class InstrumentedOkHttpClientTest {
     server.shutdown();
   }
 
-  @Test public void dispatcherIsInstrumented() throws Exception {
+  @Test public void executorServiceIsInstrumented() throws Exception {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
     server.start();
     URL baseUrl = server.getUrl("/");
 
-    MetricRegistry registry = new MetricRegistry();
-    OkHttpClient rawClient = new OkHttpClient();
     rawClient.setDispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()));  // Force the requests to execute on this unit tests thread.
     rawClient.setConnectionPool(ConnectionPool.getDefault());
     OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
@@ -184,20 +184,17 @@ public final class InstrumentedOkHttpClientTest {
   }
 
   @Test public void equality() throws Exception {
-    OkHttpClient client = new OkHttpClient();
-    InstrumentedOkHttpClient iClientA = new InstrumentedOkHttpClient(registry, client);
-    InstrumentedOkHttpClient iClientB = new InstrumentedOkHttpClient(registry, client);
+    InstrumentedOkHttpClient clientA = new InstrumentedOkHttpClient(mockRegistry, rawClient);
+    InstrumentedOkHttpClient clientB = new InstrumentedOkHttpClient(mockRegistry, rawClient);
 
-    assertThat(iClientA).isEqualTo(iClientB);
-    assertThat(iClientA).isEqualTo(client);
-    assertThat(iClientB).isEqualTo(client);
+    assertThat(clientA).isEqualTo(clientB);
+    assertThat(clientA).isEqualTo(rawClient);
+    assertThat(clientB).isEqualTo(rawClient);
   }
 
   @Test public void stringRepresentation() throws Exception {
-    OkHttpClient client = new OkHttpClient();
-    InstrumentedOkHttpClient iClient = new InstrumentedOkHttpClient(registry, client);
-
-    assertThat(client.toString()).isEqualTo(iClient.toString());
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(mockRegistry, rawClient);
+    assertThat(client.toString()).isEqualTo(rawClient.toString());
   }
 
   /**

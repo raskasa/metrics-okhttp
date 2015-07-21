@@ -4,10 +4,53 @@ Metrics Integration for OkHttp
 An [OkHttp Client][okhttp] wrapper providing [Metrics][metrics] instrumentation of connection pools, 
 request durations and rates, and other useful information.
 
+Usage
+-----
+
+`metrics-okhttp` provides `InstrumentedOkHttpClients`, a static factory class for instrumenting 
+OkHttp HTTP clients.
+
+You can create an instrumented `OkHttpClient` by doing the following:
+
+```java
+Metrics registry = ...;
+OkHttpClient client = InstrumentedOkHttpClients.create(registry);
+```
+
+If you wish to provide you're own `OkHttpClient` instance, you can do that as well:
+
+```java
+Metrics registry = ...;
+OkHttpClient rawClient = ...;
+OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
+```
+
+An instrumented OkHttp HTTP client provides the following metrics:
+
+```
+com.squareup.okhttp.OkHttpClient.cache-request-count
+com.squareup.okhttp.OkHttpClient.cache-hit-count
+com.squareup.okhttp.OkHttpClient.cache-network-count
+com.squareup.okhttp.OkHttpClient.cache-current-size
+com.squareup.okhttp.OkHttpClient.cache-max-size
+com.squareup.okhttp.OkHttpClient.cache-size
+com.squareup.okhttp.OkHttpClient.cache-write-success-count
+com.squareup.okhttp.OkHttpClient.cache-write-abort-count
+com.squareup.okhttp.OkHttpClient.connection-pool-count
+com.squareup.okhttp.OkHttpClient.connection-pool-count-http
+com.squareup.okhttp.OkHttpClient.connection-pool-count-multiplexed
+com.squareup.okhttp.OkHttpClient.network-requests-completed
+com.squareup.okhttp.OkHttpClient.network-requests-duration
+com.squareup.okhttp.OkHttpClient.network-requests-running
+com.squareup.okhttp.OkHttpClient.network-requests-submitted
+```
+
 Download
 --------
 
 **Metrics Integration for OkHttp is currently under development.**  The API is not stable and neither is the feature set.
+
+Snapshots of the development version are available in [Sonatype's `snapshots` repository][sonatype].
 
 License
 -------
@@ -28,3 +71,4 @@ License
   
   [metrics]: https://dropwizard.github.io/metrics/3.1.0/
   [okhttp]: http://square.github.io/okhttp/
+  [sonatype]: https://oss.sonatype.org/content/repositories/snapshots/
