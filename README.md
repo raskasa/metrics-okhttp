@@ -28,6 +28,14 @@ OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
 An instrumented OkHttp HTTP client provides the following metrics:
 
 ```
+com.squareup.okhttp.OkHttpClient.cache-request-count
+com.squareup.okhttp.OkHttpClient.cache-hit-count
+com.squareup.okhttp.OkHttpClient.cache-network-count
+com.squareup.okhttp.OkHttpClient.cache-current-size
+com.squareup.okhttp.OkHttpClient.cache-max-size
+com.squareup.okhttp.OkHttpClient.cache-size
+com.squareup.okhttp.OkHttpClient.cache-write-success-count
+com.squareup.okhttp.OkHttpClient.cache-write-abort-count
 com.squareup.okhttp.OkHttpClient.connection-pool-count
 com.squareup.okhttp.OkHttpClient.connection-pool-count-http
 com.squareup.okhttp.OkHttpClient.connection-pool-count-multiplexed
