@@ -22,7 +22,7 @@ If you wish to provide you're own `OkHttpClient` instance, you can do that as we
 ```java
 Metrics registry = ...;
 OkHttpClient rawClient = ...;
-OkHttpClient client = InstrumentedOkHttpClients.create(registry, client);
+OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
 ```
 
 An instrumented OkHttp HTTP client provides the following metrics:
