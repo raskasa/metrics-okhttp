@@ -1,5 +1,5 @@
-Metrics OkHttp
-==============
+Metrics Integration for OkHttp
+==============================
 
 An [OkHttp Client][okhttp] wrapper providing [Metrics][metrics] instrumentation of connection pools, 
 request durations and rates, and other useful information.
@@ -7,7 +7,7 @@ request durations and rates, and other useful information.
 Download
 --------
 
-**Metrics OkHttp is currently under development.**  The API is not stable and neither is the feature set.
+**Metrics Integration for OkHttp is currently under development.**  The API is not stable and neither is the feature set.
 
 License
 -------
