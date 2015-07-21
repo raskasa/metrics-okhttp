@@ -4,6 +4,39 @@ Metrics OkHttp
 An [OkHttp Client][okhttp] wrapper providing [Metrics][metrics] instrumentation of connection pools, 
 request durations and rates, and other useful information.
 
+Usage
+-----
+
+`metrics-okhttp` provides `InstrumentedOkHttpClients`, a static factory class for instrumenting 
+OkHttp HTTP clients.
+
+You can create an instrumented `OkHttpClient` by doing the following:
+
+```java
+Metrics registry = ...;
+OkHttpClient client = InstrumentedOkHttpClients.create(registry);
+```
+
+If you wish to provide you're own `OkHttpClient` instance, you can do that as well:
+
+```java
+Metrics registry = ...;
+OkHttpClient rawClient = ...;
+OkHttpClient client = InstrumentedOkHttpClients.create(registry, client);
+```
+
+An instrumented OkHttp HTTP client provides the following metrics:
+
+```
+com.squareup.okhttp.OkHttpClient.connection-pool-count
+com.squareup.okhttp.OkHttpClient.connection-pool-count-http
+com.squareup.okhttp.OkHttpClient.connection-pool-count-multiplexed
+com.squareup.okhttp.OkHttpClient.network-requests-completed
+com.squareup.okhttp.OkHttpClient.network-requests-duration
+com.squareup.okhttp.OkHttpClient.network-requests-running
+com.squareup.okhttp.OkHttpClient.network-requests-submitted
+```
+
 Download
 --------
 
