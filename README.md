@@ -9,6 +9,8 @@ Download
 
 **Metrics OkHttp is currently under development.**  The API is not stable and neither is the feature set.
 
+Snapshots of the development version are available in [Sonatype's `snapshots` repository][sonatype].
+
 License
 -------
 
@@ -28,3 +30,4 @@ License
   
   [metrics]: https://dropwizard.github.io/metrics/3.1.0/
   [okhttp]: http://square.github.io/okhttp/
+  [sonatype]: https://oss.sonatype.org/content/repositories/snapshots/
