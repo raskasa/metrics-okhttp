@@ -50,6 +50,20 @@ Download
 
 **Metrics Integration for OkHttp is currently under development.**  The API is not stable and neither is the feature set.
 
+```
+<dependency>
+  <groupId>com.raskasa.metrics</groupId>
+  <artifactId>metrics-okhttp</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
+
+or Gradle:
+
+```
+compile 'com.raskasa.metrics:metrics-okhttp:0.1.0'
+```
+
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][sonatype].
 
 License
