@@ -29,14 +29,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-// TODO: Add unit tests for this class.
-
 /**
  * An {@link ExecutorService} that monitors the number of network requests
  * submitted, running, completed and also keeps a {@link Timer} for the request
  * duration.
  */
-public final class InstrumentedExecutorService implements ExecutorService {
+final class InstrumentedExecutorService implements ExecutorService {
   private final ExecutorService delegate;
   private final Meter submitted;
   private final Counter running;
@@ -68,7 +66,7 @@ public final class InstrumentedExecutorService implements ExecutorService {
 
   @Override public <T> Future<T> submit(Callable<T> task) {
     submitted.mark();
-    return delegate.submit(new InstrumentedCallable<T>(task));
+    return delegate.submit(new InstrumentedCallable<>(task));
   }
 
   @Override public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
@@ -97,9 +95,9 @@ public final class InstrumentedExecutorService implements ExecutorService {
   }
 
   private <T> Collection<? extends Callable<T>> instrument(Collection<? extends Callable<T>> tasks) {
-    final List<InstrumentedCallable<T>> instrumented = new ArrayList<InstrumentedCallable<T>>(tasks.size());
+    final List<InstrumentedCallable<T>> instrumented = new ArrayList<>(tasks.size());
     for (Callable<T> task : tasks) {
-      instrumented.add(new InstrumentedCallable<T>(task));
+      instrumented.add(new InstrumentedCallable<>(task));
     }
     return instrumented;
   }
