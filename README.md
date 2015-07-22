@@ -50,7 +50,7 @@ Download
 
 **Metrics Integration for OkHttp is currently under development.**  The API is not stable and neither is the feature set.
 
-Download latest [jar][metrics-okhttp] or depend on Maven:
+Download [the latest jar][metrics-okhttp] or depend on Maven:
 
 ```xml
 <dependency>
