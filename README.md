@@ -13,14 +13,14 @@ OkHttp HTTP clients.
 You can create an instrumented `OkHttpClient` by doing the following:
 
 ```java
-Metrics registry = ...;
+MetricRegistry registry = ...;
 OkHttpClient client = InstrumentedOkHttpClients.create(registry);
 ```
 
 If you wish to provide you're own `OkHttpClient` instance, you can do that as well:
 
 ```java
-Metrics registry = ...;
+MetricRegistry registry = ...;
 OkHttpClient rawClient = ...;
 OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
 ```
@@ -50,7 +50,9 @@ Download
 
 **Metrics Integration for OkHttp is currently under development.**  The API is not stable and neither is the feature set.
 
-```
+Download latest [jar][metrics-okhttp] or depend on Maven:
+
+```xml
 <dependency>
   <groupId>com.raskasa.metrics</groupId>
   <artifactId>metrics-okhttp</artifactId>
@@ -60,7 +62,7 @@ Download
 
 or Gradle:
 
-```
+```groovy
 compile 'com.raskasa.metrics:metrics-okhttp:0.1.0'
 ```
 
@@ -84,5 +86,6 @@ License
     limitations under the License.
   
   [metrics]: https://dropwizard.github.io/metrics/3.1.0/
+  [metrics-okhttp]: https://search.maven.org/remote_content?g=com.raskasa.metrics&a=metrics-okhttp&v=LATEST
   [okhttp]: http://square.github.io/okhttp/
-  [sonatype]: https://oss.sonatype.org/content/repositories/snapshots/
+  [sonatype]: https://oss.sonatype.org/content/repositories/snapshots/com/raskasa/metrics/

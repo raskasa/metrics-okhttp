@@ -5,7 +5,7 @@ jdk:
   - oraclejdk8
 
 after_success:
-  - .buildscript/deploy_snapshot.sh
+  - .buildscript/deploy.sh
 
 env:
   global:
