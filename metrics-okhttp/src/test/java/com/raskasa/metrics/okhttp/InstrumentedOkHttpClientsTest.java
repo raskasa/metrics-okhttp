@@ -46,7 +46,7 @@ public final class InstrumentedOkHttpClientsTest {
 
   @Test public void createWithClient() throws Exception {
     OkHttpClient rawClient = new OkHttpClient();
-    OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
+    OkHttpClient client = InstrumentedOkHttpClients.create(registry, "service-name", rawClient);
 
     assertThat(client.getDispatcher()).isEqualTo(rawClient.getDispatcher());
     assertThat(client.getProxy()).isEqualTo(rawClient.getProxy());

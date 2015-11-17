@@ -22,18 +22,25 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /** Factor methods for creating an instrumented {@code OkHttpClient}. */
 public final class InstrumentedOkHttpClients {
+
   /** Create an instrumented {@code OkHttpClient}. */
   public static OkHttpClient create(MetricRegistry registry) {
     final OkHttpClient client = new OkHttpClient();
     client.setConnectTimeout(10, SECONDS);
     client.setReadTimeout(10, SECONDS);
     client.setWriteTimeout(10, SECONDS);
-    return new InstrumentedOkHttpClient(registry, client);
+    return new InstrumentedOkHttpClient(registry, "default-client", client);
   }
 
-  /** Create an instrumented {@code OkHttpClient}, using the given client. */
-  public static OkHttpClient create(MetricRegistry registry, OkHttpClient client) {
-    return new InstrumentedOkHttpClient(registry, client);
+  /**
+   * Create an instrumented {@code OkHttpClient}, using the given client.
+   *
+   * <p>{@code name} provides an identifier for the instrumented client.  This
+   * is useful in situations where you have more than one instrumented client
+   * in your application.</p>
+   */
+  public static OkHttpClient create(MetricRegistry registry, String name, OkHttpClient client) {
+    return new InstrumentedOkHttpClient(registry, name, client);
   }
 
   private InstrumentedOkHttpClients() {
