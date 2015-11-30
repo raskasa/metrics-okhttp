@@ -48,39 +48,52 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(InstrumentedOkHttpClient.class);
   private final MetricRegistry registry;
   private final OkHttpClient rawClient;
+  private final String name;
 
-  public InstrumentedOkHttpClient(MetricRegistry registry, final OkHttpClient rawClient) {
+  public InstrumentedOkHttpClient(MetricRegistry registry, String name, final OkHttpClient rawClient) {
     this.rawClient = rawClient;
     this.registry = registry;
+    this.name = name;
     instrumentHttpCache();
     instrumentConnectionPool();
     instrumentExecutorService();
   }
 
+  /**
+   * Generates an identifier with a common prefix for this client.
+   *
+   * <p>The generated identifier is the fully qualified name of the
+   * {@link OkHttpClient}, plus the {@link InstrumentedOkHttpClient#name} of
+   * this is client, plus the given {@code fieldName}.</p>
+   */
+  String registryName(String fieldName) {
+    return name(OkHttpClient.class, name, fieldName);
+  }
+
   private void instrumentHttpCache() {
     if (getCache() == null) return;
 
-    registry.register(name(OkHttpClient.class, "cache-request-count"), new Gauge<Integer>() {
+    registry.register(registryName("cache-request-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getRequestCount();  // The number of HTTP requests issued since this cache was created.
       }
     });
-    registry.register(name(OkHttpClient.class, "cache-hit-count"), new Gauge<Integer>() {
+    registry.register(registryName("cache-hit-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getHitCount();  // ... the number of those requests that required network use.
       }
     });
-    registry.register(name(OkHttpClient.class, "cache-network-count"), new Gauge<Integer>() {
+    registry.register(registryName("cache-network-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getNetworkCount();  // ... the number of those requests whose responses were served by the cache.
       }
     });
-    registry.register(name(OkHttpClient.class, "cache-write-success-count"), new Gauge<Integer>() {
+    registry.register(registryName("cache-write-success-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getWriteSuccessCount();
       }
     });
-    registry.register(name(OkHttpClient.class, "cache-write-abort-count"), new Gauge<Integer>() {
+    registry.register(registryName("cache-write-abort-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getWriteAbortCount();
       }
@@ -100,9 +113,9 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
         return rawClient.getCache().getMaxSize();
       }
     };
-    registry.register(name(OkHttpClient.class, "cache-current-size"), currentCacheSize);
-    registry.register(name(OkHttpClient.class, "cache-max-size"), maxCacheSize);
-    registry.register(name(OkHttpClient.class, "cache-size"), new RatioGauge() {
+    registry.register(registryName("cache-current-size"), currentCacheSize);
+    registry.register(registryName("cache-max-size"), maxCacheSize);
+    registry.register(registryName("cache-size"), new RatioGauge() {
       @Override protected Ratio getRatio() {
         return Ratio.of(currentCacheSize.getValue(), maxCacheSize.getValue());
       }
@@ -112,17 +125,17 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   private void instrumentConnectionPool() {
     if (getConnectionPool() == null) rawClient.setConnectionPool(ConnectionPool.getDefault());
 
-    registry.register(name(OkHttpClient.class, "connection-pool-count"), new Gauge<Integer>() {
+    registry.register(registryName("connection-pool-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getConnectionPool().getConnectionCount();
       }
     });
-    registry.register(name(OkHttpClient.class, "connection-pool-count-http"), new Gauge<Integer>() {
+    registry.register(registryName("connection-pool-count-http"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getConnectionPool().getHttpConnectionCount();
       }
     });
-    registry.register(name(OkHttpClient.class, "connection-pool-count-multiplexed"), new Gauge<Integer>() {
+    registry.register(registryName("connection-pool-count-multiplexed"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getConnectionPool().getMultiplexedConnectionCount();
       }
@@ -133,7 +146,7 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     InstrumentedExecutorService executorService =
         new InstrumentedExecutorService(rawClient.getDispatcher().getExecutorService(),
             registry,
-            OkHttpClient.class.getName());
+            name(OkHttpClient.class, this.name));
 
     rawClient.setDispatcher(new Dispatcher(executorService));
   }
