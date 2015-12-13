@@ -71,14 +71,14 @@ public final class InstrumentedOkHttpClientTest {
 
     Cache cache = new Cache(cacheRule.getRoot(), Long.MAX_VALUE);
     rawClient.setCache(cache);
-    OkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getGauges()
-        .get(OkHttpClient.class.getName() + ".cache-max-size")
+        .get(client.metricId("cache-max-size"))
         .getValue())
         .isEqualTo(Long.MAX_VALUE);
     assertThat(registry.getGauges()
-        .get(OkHttpClient.class.getName() + ".cache-current-size")
+        .get(client.metricId("cache-current-size"))
         .getValue())
         .isEqualTo(0L);
 
@@ -86,7 +86,7 @@ public final class InstrumentedOkHttpClientTest {
     Response response = client.newCall(request).execute();
 
     assertThat(registry.getGauges()
-        .get(OkHttpClient.class.getName() + ".cache-current-size")
+        .get(client.metricId("cache-current-size"))
         .getValue())
         .isEqualTo(rawClient.getCache().getSize());
 
@@ -103,18 +103,18 @@ public final class InstrumentedOkHttpClientTest {
     URL baseUrl = server.getUrl("/");
 
     rawClient.setConnectionPool(ConnectionPool.getDefault());
-    OkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getGauges()
-        .get(OkHttpClient.class.getName() + ".connection-pool-count")
+        .get(client.metricId("connection-pool-count"))
         .getValue())
         .isEqualTo(0);
     assertThat(registry.getGauges()
-        .get(OkHttpClient.class.getName() + ".connection-pool-count-http")
+        .get(client.metricId("connection-pool-count-http"))
         .getValue())
         .isEqualTo(0);
     assertThat(registry.getGauges()
-        .get(OkHttpClient.class.getName() + ".connection-pool-count-multiplexed")
+        .get(client.metricId("connection-pool-count-multiplexed"))
         .getValue())
         .isEqualTo(0);
 
@@ -124,15 +124,15 @@ public final class InstrumentedOkHttpClientTest {
     Response resp2 = client.newCall(req2).execute();
 
     assertThat(registry.getGauges()
-        .get(OkHttpClient.class.getName() + ".connection-pool-count")
+        .get(client.metricId("connection-pool-count"))
         .getValue())
         .isEqualTo(1);
     assertThat(registry.getGauges()
-        .get(OkHttpClient.class.getName() + ".connection-pool-count-http")
+        .get(client.metricId("connection-pool-count-http"))
         .getValue())
         .isEqualTo(1);
     assertThat(registry.getGauges()
-        .get(OkHttpClient.class.getName() + ".connection-pool-count-multiplexed")
+        .get(client.metricId("connection-pool-count-multiplexed"))
         .getValue())
         .isEqualTo(0);
 
@@ -150,14 +150,14 @@ public final class InstrumentedOkHttpClientTest {
 
     rawClient.setDispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()));  // Force the requests to execute on this unit tests thread.
     rawClient.setConnectionPool(ConnectionPool.getDefault());
-    OkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getMeters()
-        .get(OkHttpClient.class.getName() + ".network-requests-submitted")
+        .get(client.metricId("network-requests-submitted"))
         .getCount())
         .isEqualTo(0);
     assertThat(registry.getMeters()
-        .get(OkHttpClient.class.getName() + ".network-requests-completed")
+        .get(client.metricId("network-requests-completed"))
         .getCount())
         .isEqualTo(0);
 
@@ -167,11 +167,11 @@ public final class InstrumentedOkHttpClientTest {
     client.newCall(req2).enqueue(new TestCallback());
 
     assertThat(registry.getMeters()
-        .get(OkHttpClient.class.getName() + ".network-requests-submitted")
+        .get(client.metricId("network-requests-submitted"))
         .getCount())
         .isEqualTo(2);
     assertThat(registry.getMeters()
-        .get(OkHttpClient.class.getName() + ".network-requests-completed")
+        .get(client.metricId("network-requests-completed"))
         .getCount())
         .isEqualTo(2);
   }
