@@ -21,13 +21,13 @@ import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.Dispatcher;
+import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.io.IOException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -56,18 +56,17 @@ public final class InstrumentedOkHttpClientTest {
     rawClient = new OkHttpClient();
   }
 
+  @Rule public MockWebServer server = new MockWebServer();
   @Rule public TemporaryFolder cacheRule = new TemporaryFolder();
 
   @Test public void httpCacheIsInstrumented() throws Exception {
-    MockWebServer server = new MockWebServer();
     MockResponse mockResponse = new MockResponse()
         .addHeader("Cache-Control:public, max-age=31536000")
         .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
         .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
         .setBody("one");
     server.enqueue(mockResponse);
-    server.start();
-    URL baseUrl = server.getUrl("/");
+    HttpUrl baseUrl = server.url("/");
 
     Cache cache = new Cache(cacheRule.getRoot(), Long.MAX_VALUE);
     rawClient.setCache(cache);
@@ -91,16 +90,12 @@ public final class InstrumentedOkHttpClientTest {
         .isEqualTo(rawClient.getCache().getSize());
 
     response.body().close();
-    server.shutdown();
   }
 
-  @Ignore
-  @Test public void connectionPoolIsInstrumented() throws Exception {
-    MockWebServer server = new MockWebServer();
+  @Ignore @Test public void connectionPoolIsInstrumented() throws Exception {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
-    server.start();
-    URL baseUrl = server.getUrl("/");
+    HttpUrl baseUrl = server.url("/");
 
     rawClient.setConnectionPool(ConnectionPool.getDefault());
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
@@ -138,18 +133,14 @@ public final class InstrumentedOkHttpClientTest {
 
     resp1.body().close();
     resp2.body().close();
-    server.shutdown();
   }
 
   @Test public void executorServiceIsInstrumented() throws Exception {
-    MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
-    server.start();
-    URL baseUrl = server.getUrl("/");
+    HttpUrl baseUrl = server.url("/");
 
     rawClient.setDispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()));  // Force the requests to execute on this unit tests thread.
-    rawClient.setConnectionPool(ConnectionPool.getDefault());
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getMeters()
