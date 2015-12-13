@@ -50,7 +50,7 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   private final OkHttpClient rawClient;
   private final String name;
 
-  public InstrumentedOkHttpClient(MetricRegistry registry, String name, final OkHttpClient rawClient) {
+  InstrumentedOkHttpClient(MetricRegistry registry, OkHttpClient rawClient, String name) {
     this.rawClient = rawClient;
     this.registry = registry;
     this.name = name;
@@ -64,36 +64,36 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
    *
    * <p>The generated identifier is the fully qualified name of the
    * {@link OkHttpClient}, plus the {@link InstrumentedOkHttpClient#name} of
-   * this is client, plus the given {@code fieldName}.</p>
+   * this is client, plus the given {@code metric}.
    */
-  String registryName(String fieldName) {
-    return name(OkHttpClient.class, name, fieldName);
+  String metricId(String metric) {
+    return name(OkHttpClient.class, name, metric);
   }
 
   private void instrumentHttpCache() {
     if (getCache() == null) return;
 
-    registry.register(registryName("cache-request-count"), new Gauge<Integer>() {
+    registry.register(metricId("cache-request-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getRequestCount();  // The number of HTTP requests issued since this cache was created.
       }
     });
-    registry.register(registryName("cache-hit-count"), new Gauge<Integer>() {
+    registry.register(metricId("cache-hit-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getHitCount();  // ... the number of those requests that required network use.
       }
     });
-    registry.register(registryName("cache-network-count"), new Gauge<Integer>() {
+    registry.register(metricId("cache-network-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getNetworkCount();  // ... the number of those requests whose responses were served by the cache.
       }
     });
-    registry.register(registryName("cache-write-success-count"), new Gauge<Integer>() {
+    registry.register(metricId("cache-write-success-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getWriteSuccessCount();
       }
     });
-    registry.register(registryName("cache-write-abort-count"), new Gauge<Integer>() {
+    registry.register(metricId("cache-write-abort-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getCache().getWriteAbortCount();
       }
@@ -113,9 +113,9 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
         return rawClient.getCache().getMaxSize();
       }
     };
-    registry.register(registryName("cache-current-size"), currentCacheSize);
-    registry.register(registryName("cache-max-size"), maxCacheSize);
-    registry.register(registryName("cache-size"), new RatioGauge() {
+    registry.register(metricId("cache-current-size"), currentCacheSize);
+    registry.register(metricId("cache-max-size"), maxCacheSize);
+    registry.register(metricId("cache-size"), new RatioGauge() {
       @Override protected Ratio getRatio() {
         return Ratio.of(currentCacheSize.getValue(), maxCacheSize.getValue());
       }
@@ -125,17 +125,17 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   private void instrumentConnectionPool() {
     if (getConnectionPool() == null) rawClient.setConnectionPool(ConnectionPool.getDefault());
 
-    registry.register(registryName("connection-pool-count"), new Gauge<Integer>() {
+    registry.register(metricId("connection-pool-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getConnectionPool().getConnectionCount();
       }
     });
-    registry.register(registryName("connection-pool-count-http"), new Gauge<Integer>() {
+    registry.register(metricId("connection-pool-count-http"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getConnectionPool().getHttpConnectionCount();
       }
     });
-    registry.register(registryName("connection-pool-count-multiplexed"), new Gauge<Integer>() {
+    registry.register(metricId("connection-pool-count-multiplexed"), new Gauge<Integer>() {
       @Override public Integer getValue() {
         return rawClient.getConnectionPool().getMultiplexedConnectionCount();
       }

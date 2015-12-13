@@ -29,18 +29,40 @@ public final class InstrumentedOkHttpClients {
     client.setConnectTimeout(10, SECONDS);
     client.setReadTimeout(10, SECONDS);
     client.setWriteTimeout(10, SECONDS);
-    return new InstrumentedOkHttpClient(registry, "default-client", client);
+    return new InstrumentedOkHttpClient(registry, client, null);
+  }
+
+  /** Create an instrumented {@code OkHttpClient} using the given client. */
+  public static OkHttpClient create(MetricRegistry registry, OkHttpClient client) {
+    return new InstrumentedOkHttpClient(registry, client, null);
   }
 
   /**
-   * Create an instrumented {@code OkHttpClient}, using the given client.
+   * Create an instrumented {@code OkHttpClient} and give it the provided
+   * {@code name}.
    *
    * <p>{@code name} provides an identifier for the instrumented client.  This
    * is useful in situations where you have more than one instrumented client
-   * in your application.</p>
+   * in your application.
    */
-  public static OkHttpClient create(MetricRegistry registry, String name, OkHttpClient client) {
-    return new InstrumentedOkHttpClient(registry, name, client);
+  public static OkHttpClient create(MetricRegistry registry, String name) {
+    final OkHttpClient client = new OkHttpClient();
+    client.setConnectTimeout(10, SECONDS);
+    client.setReadTimeout(10, SECONDS);
+    client.setWriteTimeout(10, SECONDS);
+    return new InstrumentedOkHttpClient(registry, client, name);
+  }
+
+  /**
+   * Create an instrumented {@code OkHttpClient} using the given client and
+   * give it the provided name.
+   *
+   * <p>{@code name} provides an identifier for the instrumented client.  This
+   * is useful in situations where you have more than one instrumented client
+   * in your application.
+   */
+  public static OkHttpClient create(MetricRegistry registry, OkHttpClient client, String name) {
+    return new InstrumentedOkHttpClient(registry, client, name);
   }
 
   private InstrumentedOkHttpClients() {
