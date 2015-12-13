@@ -34,7 +34,6 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -57,12 +56,6 @@ public final class InstrumentedOkHttpClientTest {
     rawClient = new OkHttpClient();
   }
 
-  @After public void tearDown() throws Exception {
-    mockRegistry = null;
-    registry = null;
-    rawClient = null;
-  }
-
   @Rule public TemporaryFolder cacheRule = new TemporaryFolder();
 
   @Test public void httpCacheIsInstrumented() throws Exception {
@@ -78,16 +71,14 @@ public final class InstrumentedOkHttpClientTest {
 
     Cache cache = new Cache(cacheRule.getRoot(), Long.MAX_VALUE);
     rawClient.setCache(cache);
-    OkHttpClient client = InstrumentedOkHttpClients.create(registry, "service-name", rawClient);
-
-    String baseName = OkHttpClient.class.getName() + ".service-name";
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getGauges()
-        .get(baseName + ".cache-max-size")
+        .get(client.metricId("cache-max-size"))
         .getValue())
         .isEqualTo(Long.MAX_VALUE);
     assertThat(registry.getGauges()
-        .get(baseName + ".cache-current-size")
+        .get(client.metricId("cache-current-size"))
         .getValue())
         .isEqualTo(0L);
 
@@ -95,7 +86,7 @@ public final class InstrumentedOkHttpClientTest {
     Response response = client.newCall(request).execute();
 
     assertThat(registry.getGauges()
-        .get(baseName + ".cache-current-size")
+        .get(client.metricId("cache-current-size"))
         .getValue())
         .isEqualTo(rawClient.getCache().getSize());
 
@@ -112,20 +103,18 @@ public final class InstrumentedOkHttpClientTest {
     URL baseUrl = server.getUrl("/");
 
     rawClient.setConnectionPool(ConnectionPool.getDefault());
-    OkHttpClient client = InstrumentedOkHttpClients.create(registry, "service-name", rawClient);
-
-    String baseName = OkHttpClient.class.getName() + ".service-name";
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getGauges()
-        .get(baseName + ".connection-pool-count")
+        .get(client.metricId("connection-pool-count"))
         .getValue())
         .isEqualTo(0);
     assertThat(registry.getGauges()
-        .get(baseName + ".connection-pool-count-http")
+        .get(client.metricId("connection-pool-count-http"))
         .getValue())
         .isEqualTo(0);
     assertThat(registry.getGauges()
-        .get(baseName + ".connection-pool-count-multiplexed")
+        .get(client.metricId("connection-pool-count-multiplexed"))
         .getValue())
         .isEqualTo(0);
 
@@ -135,15 +124,15 @@ public final class InstrumentedOkHttpClientTest {
     Response resp2 = client.newCall(req2).execute();
 
     assertThat(registry.getGauges()
-        .get(baseName + ".connection-pool-count")
+        .get(client.metricId("connection-pool-count"))
         .getValue())
         .isEqualTo(1);
     assertThat(registry.getGauges()
-        .get(baseName + ".connection-pool-count-http")
+        .get(client.metricId("connection-pool-count-http"))
         .getValue())
         .isEqualTo(1);
     assertThat(registry.getGauges()
-        .get(baseName + ".connection-pool-count-multiplexed")
+        .get(client.metricId("connection-pool-count-multiplexed"))
         .getValue())
         .isEqualTo(0);
 
@@ -161,16 +150,14 @@ public final class InstrumentedOkHttpClientTest {
 
     rawClient.setDispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()));  // Force the requests to execute on this unit tests thread.
     rawClient.setConnectionPool(ConnectionPool.getDefault());
-    OkHttpClient client = InstrumentedOkHttpClients.create(registry, "service-name", rawClient);
-
-    String baseName = OkHttpClient.class.getName() + ".service-name";
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getMeters()
-        .get(baseName + ".network-requests-submitted")
+        .get(client.metricId("network-requests-submitted"))
         .getCount())
         .isEqualTo(0);
     assertThat(registry.getMeters()
-        .get(baseName + ".network-requests-completed")
+        .get(client.metricId("network-requests-completed"))
         .getCount())
         .isEqualTo(0);
 
@@ -180,18 +167,31 @@ public final class InstrumentedOkHttpClientTest {
     client.newCall(req2).enqueue(new TestCallback());
 
     assertThat(registry.getMeters()
-        .get(baseName + ".network-requests-submitted")
+        .get(client.metricId("network-requests-submitted"))
         .getCount())
         .isEqualTo(2);
     assertThat(registry.getMeters()
-        .get(baseName + ".network-requests-completed")
+        .get(client.metricId("network-requests-completed"))
         .getCount())
         .isEqualTo(2);
   }
 
+  @Test public void providedNameUsedInMetricId() {
+    String randomMetric = "network-requests-submitted";
+    assertThat(registry.getMeters()).isEmpty();
+
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
+    String generatedId = client.metricId(randomMetric);
+    assertThat(registry.getMeters().get(generatedId)).isNotNull();
+
+    client = new InstrumentedOkHttpClient(registry, rawClient, "custom");
+    generatedId = client.metricId(randomMetric);
+    assertThat(registry.getMeters().get(generatedId)).isNotNull();
+  }
+
   @Test public void equality() throws Exception {
-    InstrumentedOkHttpClient clientA = new InstrumentedOkHttpClient(mockRegistry, "service-name", rawClient);
-    InstrumentedOkHttpClient clientB = new InstrumentedOkHttpClient(mockRegistry, "service-name", rawClient);
+    InstrumentedOkHttpClient clientA = new InstrumentedOkHttpClient(mockRegistry, rawClient, null);
+    InstrumentedOkHttpClient clientB = new InstrumentedOkHttpClient(mockRegistry, rawClient, null);
 
     assertThat(clientA).isEqualTo(clientB);
     assertThat(clientA).isEqualTo(rawClient);
@@ -199,14 +199,8 @@ public final class InstrumentedOkHttpClientTest {
   }
 
   @Test public void stringRepresentation() throws Exception {
-    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(mockRegistry, "service-name", rawClient);
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(mockRegistry, rawClient, null);
     assertThat(client.toString()).isEqualTo(rawClient.toString());
-  }
-
-  @Test public void testNameGeneration() {
-    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(mockRegistry, "serviceA-client", rawClient);
-    String generatedName = client.registryName("cache-hit");
-    assertThat(generatedName).isEqualTo("com.squareup.okhttp.OkHttpClient.serviceA-client.cache-hit");
   }
 
   /**
