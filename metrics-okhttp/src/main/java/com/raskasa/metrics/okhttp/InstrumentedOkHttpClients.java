@@ -18,18 +18,12 @@ package com.raskasa.metrics.okhttp;
 import com.codahale.metrics.MetricRegistry;
 import com.squareup.okhttp.OkHttpClient;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 /** Factor methods for creating an instrumented {@code OkHttpClient}. */
 public final class InstrumentedOkHttpClients {
 
   /** Create an instrumented {@code OkHttpClient}. */
   public static OkHttpClient create(MetricRegistry registry) {
-    final OkHttpClient client = new OkHttpClient();
-    client.setConnectTimeout(10, SECONDS);
-    client.setReadTimeout(10, SECONDS);
-    client.setWriteTimeout(10, SECONDS);
-    return new InstrumentedOkHttpClient(registry, client, null);
+    return new InstrumentedOkHttpClient(registry, new OkHttpClient(), null);
   }
 
   /** Create an instrumented {@code OkHttpClient} using the given client. */
@@ -46,11 +40,7 @@ public final class InstrumentedOkHttpClients {
    * in your application.
    */
   public static OkHttpClient create(MetricRegistry registry, String name) {
-    final OkHttpClient client = new OkHttpClient();
-    client.setConnectTimeout(10, SECONDS);
-    client.setReadTimeout(10, SECONDS);
-    client.setWriteTimeout(10, SECONDS);
-    return new InstrumentedOkHttpClient(registry, client, name);
+    return new InstrumentedOkHttpClient(registry, new OkHttpClient(), name);
   }
 
   /**
