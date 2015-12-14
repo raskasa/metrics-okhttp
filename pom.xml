@@ -10,7 +10,7 @@
 
   <groupId>com.raskasa.metrics</groupId>
   <artifactId>metrics-okhttp-parent</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Metrics Integration for OkHttp (Parent)</name>
 
@@ -38,7 +38,7 @@
     <url>https://github.com/raskasa/metrics-okhttp</url>
     <connection>scm:git:https://github.com/raskasa/metrics-okhttp.git</connection>
     <developerConnection>scm:git:git@github.com:raskasa/metrics-okhttp.git</developerConnection>
-    <tag>v0.2.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <issueManagement>
