@@ -18,21 +18,21 @@ package com.raskasa.metrics.okhttp;
 import com.codahale.metrics.MetricRegistry;
 import com.squareup.okhttp.OkHttpClient;
 
-/** Factor methods for creating an instrumented {@code OkHttpClient}. */
+/** Static factory methods for instrumenting an {@link OkHttpClient}. */
 public final class InstrumentedOkHttpClients {
 
-  /** Create an instrumented {@code OkHttpClient}. */
+  /** Create and instrument an {@link OkHttpClient}. */
   public static OkHttpClient create(MetricRegistry registry) {
     return new InstrumentedOkHttpClient(registry, new OkHttpClient(), null);
   }
 
-  /** Create an instrumented {@code OkHttpClient} using the given client. */
+  /** Instrument the given {@link OkHttpClient}. */
   public static OkHttpClient create(MetricRegistry registry, OkHttpClient client) {
     return new InstrumentedOkHttpClient(registry, client, null);
   }
 
   /**
-   * Create an instrumented {@code OkHttpClient} and give it the provided
+   * Create and instrument an {@link OkHttpClient} and give it the provided
    * {@code name}.
    *
    * <p>{@code name} provides an identifier for the instrumented client.  This
@@ -44,8 +44,7 @@ public final class InstrumentedOkHttpClients {
   }
 
   /**
-   * Create an instrumented {@code OkHttpClient} using the given client and
-   * give it the provided name.
+   * Instrument the given {@link OkHttpClient} and give it the provided name.
    *
    * <p>{@code name} provides an identifier for the instrumented client.  This
    * is useful in situations where you have more than one instrumented client
