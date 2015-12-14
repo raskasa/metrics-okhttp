@@ -5,6 +5,6 @@ Release Process
  
  2. Update `README.md` with new usage and download info.
  
- 3. Commit: `git commit -am "Prepare version X.Y.Z."`
+ 3. Commit: `git commit -am "Update project documentation for X.Y.Z."`
  
  4. Prepare: `mvn release:prepare release:perform`
