@@ -30,8 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * An {@link ExecutorService} that monitors the number of network requests
- * submitted, running, completed and also keeps a {@link Timer} for the request
+ * An {@link ExecutorService} that monitors the number of submitted, running,
+ * and completed network requests.  Also, keeps a {@link Timer} for the request
  * duration.
  */
 final class InstrumentedExecutorService implements ExecutorService {
