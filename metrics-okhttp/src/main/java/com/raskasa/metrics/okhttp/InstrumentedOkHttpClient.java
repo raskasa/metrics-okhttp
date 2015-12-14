@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
-/** Wraps an {@code OkHttpClient} in order to provide statistics about it's internals. */
+/** Wraps an {@link OkHttpClient} in order to provide data about its internals. */
 final class InstrumentedOkHttpClient extends OkHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(InstrumentedOkHttpClient.class);
   private final MetricRegistry registry;
@@ -60,11 +60,16 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   /**
-   * Generates an identifier with a common prefix for this client.
+   * Generates an identifier, with a common prefix, in order to uniquely
+   * identify the {@code metric} in the registry.
    *
-   * <p>The generated identifier is the fully qualified name of the
-   * {@link OkHttpClient}, plus the {@link InstrumentedOkHttpClient#name} of
-   * this is client, plus the given {@code metric}.
+   * <p>The generated identifier includes:
+   *
+   * <ul>
+   *   <li>the fully qualified name of the {@link OkHttpClient} class</li>
+   *   <li>the name of the instrumented client, if provided</li>
+   *   <li>the given {@code metric}</li>
+   * </ul>
    */
   String metricId(String metric) {
     return name(OkHttpClient.class, name, metric);
