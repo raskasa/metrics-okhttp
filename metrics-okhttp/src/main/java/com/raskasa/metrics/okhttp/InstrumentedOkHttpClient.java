@@ -25,6 +25,7 @@ import com.squareup.okhttp.CertificatePinner;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.ConnectionSpec;
 import com.squareup.okhttp.Dispatcher;
+import com.squareup.okhttp.Dns;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Protocol;
@@ -210,6 +211,14 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
 
   @Override public Cache getCache() {
     return rawClient.getCache();
+  }
+
+  @Override public OkHttpClient setDns(Dns dns) {
+    return rawClient.setDns(dns);
+  }
+
+  @Override public Dns getDns() {
+    return rawClient.getDns();
   }
 
   @Override public OkHttpClient setSocketFactory(SocketFactory socketFactory) {
