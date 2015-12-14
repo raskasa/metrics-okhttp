@@ -20,6 +20,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.ConnectionPool;
+import com.squareup.okhttp.ConnectionPoolProxy;
 import com.squareup.okhttp.Dispatcher;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
@@ -35,7 +36,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -43,9 +43,12 @@ import org.junit.rules.TemporaryFolder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-// TODO: Add tests for instrumentation of the connection pool.
-
 public final class InstrumentedOkHttpClientTest {
+  private Runnable emptyRunnable = new Runnable() {
+    @Override public void run() {
+    }
+  };
+
   private MetricRegistry mockRegistry;
   private MetricRegistry registry;
   private OkHttpClient rawClient;
@@ -92,12 +95,14 @@ public final class InstrumentedOkHttpClientTest {
     response.body().close();
   }
 
-  @Ignore @Test public void connectionPoolIsInstrumented() throws Exception {
+  @Test public void connectionPoolIsInstrumented() throws Exception {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
-    rawClient.setConnectionPool(ConnectionPool.getDefault());
+    ConnectionPool pool = new ConnectionPool(Integer.MAX_VALUE, 100L);
+    new ConnectionPoolProxy(pool, emptyRunnable);  // Used so that the connection pool can be properly unit tested
+    rawClient.setConnectionPool(pool);
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getGauges()
@@ -121,11 +126,11 @@ public final class InstrumentedOkHttpClientTest {
     assertThat(registry.getGauges()
         .get(client.metricId("connection-pool-count"))
         .getValue())
-        .isEqualTo(1);
+        .isEqualTo(2);
     assertThat(registry.getGauges()
         .get(client.metricId("connection-pool-count-http"))
         .getValue())
-        .isEqualTo(1);
+        .isEqualTo(2);
     assertThat(registry.getGauges()
         .get(client.metricId("connection-pool-count-multiplexed"))
         .getValue())
@@ -133,6 +138,7 @@ public final class InstrumentedOkHttpClientTest {
 
     resp1.body().close();
     resp2.body().close();
+    pool.evictAll();
   }
 
   @Test public void executorServiceIsInstrumented() throws Exception {
