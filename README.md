@@ -18,7 +18,7 @@ MetricRegistry registry = ...;
 OkHttpClient client = InstrumentedOkHttpClients.create(registry);
 ```
 
-If you wish to provide you're own `OkHttpClient` instance, you can do that as well:
+If you wish to provide your own `OkHttpClient` instance, you can do that as well:
 
 ```java
 MetricRegistry registry = ...;
