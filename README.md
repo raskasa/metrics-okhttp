@@ -59,7 +59,7 @@ com.squareup.okhttp.OkHttpClient.network-requests-running
 com.squareup.okhttp.OkHttpClient.network-requests-submitted
 ```
 
-If you provide a custom name for the instrumented client (i.e. `custom-name),
+If you provide a custom name for the instrumented client (i.e. `custom-name`),
 the metrics will have the following format:
 
 ```
