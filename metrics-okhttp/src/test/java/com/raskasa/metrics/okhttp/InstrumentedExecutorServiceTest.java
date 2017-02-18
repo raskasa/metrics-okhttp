@@ -30,7 +30,8 @@ public final class InstrumentedExecutorServiceTest {
   @Test public void reportsTasksInformation() throws Exception {
     MetricRegistry registry = new MetricRegistry();
     ExecutorService executor = MoreExecutors.newDirectExecutorService();
-    final InstrumentedExecutorService instrumentedExecutorService = new InstrumentedExecutorService(executor, registry, "xs");
+    final InstrumentedExecutorService instrumentedExecutorService =
+        new InstrumentedExecutorService(executor, registry, "xs");
     final Meter submitted = registry.meter("xs.network-requests-submitted");
     final Counter running = registry.counter("xs.network-requests-running");
     final Meter completed = registry.meter("xs.network-requests-completed");

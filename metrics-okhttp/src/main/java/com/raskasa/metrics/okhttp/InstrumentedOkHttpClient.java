@@ -18,27 +18,28 @@ package com.raskasa.metrics.okhttp;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.RatioGauge;
-import com.squareup.okhttp.Authenticator;
-import com.squareup.okhttp.Cache;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.CertificatePinner;
-import com.squareup.okhttp.ConnectionPool;
-import com.squareup.okhttp.ConnectionSpec;
-import com.squareup.okhttp.Dispatcher;
-import com.squareup.okhttp.Dns;
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Protocol;
-import com.squareup.okhttp.Request;
 import java.io.IOException;
-import java.net.CookieHandler;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
+import okhttp3.Authenticator;
+import okhttp3.Cache;
+import okhttp3.Call;
+import okhttp3.CertificatePinner;
+import okhttp3.ConnectionPool;
+import okhttp3.ConnectionSpec;
+import okhttp3.CookieJar;
+import okhttp3.Dispatcher;
+import okhttp3.Dns;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,7 @@ import static com.codahale.metrics.MetricRegistry.name;
 final class InstrumentedOkHttpClient extends OkHttpClient {
   private static final Logger LOG = LoggerFactory.getLogger(InstrumentedOkHttpClient.class);
   private final MetricRegistry registry;
-  private final OkHttpClient rawClient;
+  private OkHttpClient rawClient;
   private final String name;
 
   InstrumentedOkHttpClient(MetricRegistry registry, OkHttpClient rawClient, String name) {
@@ -77,37 +78,40 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentHttpCache() {
-    if (getCache() == null) return;
+    if (cache() == null) return;
 
     registry.register(metricId("cache-request-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
-        return rawClient.getCache().getRequestCount();  // The number of HTTP requests issued since this cache was created.
+        // The number of HTTP requests issued since this cache was created.
+        return rawClient.cache().requestCount();
       }
     });
     registry.register(metricId("cache-hit-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
-        return rawClient.getCache().getHitCount();  // ... the number of those requests that required network use.
+        // ... the number of those requests that required network use.
+        return rawClient.cache().hitCount();
       }
     });
     registry.register(metricId("cache-network-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
-        return rawClient.getCache().getNetworkCount();  // ... the number of those requests whose responses were served by the cache.
+        // ... the number of those requests whose responses were served by the cache.
+        return rawClient.cache().networkCount();
       }
     });
     registry.register(metricId("cache-write-success-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
-        return rawClient.getCache().getWriteSuccessCount();
+        return rawClient.cache().writeSuccessCount();
       }
     });
     registry.register(metricId("cache-write-abort-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
-        return rawClient.getCache().getWriteAbortCount();
+        return rawClient.cache().writeAbortCount();
       }
     });
     final Gauge<Long> currentCacheSize = new Gauge<Long>() {
       @Override public Long getValue() {
         try {
-          return rawClient.getCache().getSize();
+          return rawClient.cache().size();
         } catch (IOException ex) {
           LOG.error(ex.getMessage(), ex);
           return -1L;
@@ -116,7 +120,7 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     };
     final Gauge<Long> maxCacheSize = new Gauge<Long>() {
       @Override public Long getValue() {
-        return rawClient.getCache().getMaxSize();
+        return rawClient.cache().maxSize();
       }
     };
     registry.register(metricId("cache-current-size"), currentCacheSize);
@@ -129,192 +133,113 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentConnectionPool() {
-    if (getConnectionPool() == null) rawClient.setConnectionPool(ConnectionPool.getDefault());
+    if (connectionPool() == null) {
+      rawClient = rawClient.newBuilder().connectionPool(new ConnectionPool()).build();
+    }
 
-    registry.register(metricId("connection-pool-count"), new Gauge<Integer>() {
+    registry.register(metricId("connection-pool-total-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
-        return rawClient.getConnectionPool().getConnectionCount();
+        return rawClient.connectionPool().connectionCount();
       }
     });
-    registry.register(metricId("connection-pool-count-http"), new Gauge<Integer>() {
+    registry.register(metricId("connection-pool-idle-count"), new Gauge<Integer>() {
       @Override public Integer getValue() {
-        return rawClient.getConnectionPool().getHttpConnectionCount();
-      }
-    });
-    registry.register(metricId("connection-pool-count-multiplexed"), new Gauge<Integer>() {
-      @Override public Integer getValue() {
-        return rawClient.getConnectionPool().getMultiplexedConnectionCount();
+        return rawClient.connectionPool().idleConnectionCount();
       }
     });
   }
 
   private void instrumentExecutorService() {
-    InstrumentedExecutorService executorService =
-        new InstrumentedExecutorService(rawClient.getDispatcher().getExecutorService(),
-            registry,
-            name(OkHttpClient.class, this.name));
+    InstrumentedExecutorService executorService = new InstrumentedExecutorService(
+        rawClient.dispatcher().executorService(),
+        registry,
+        name(OkHttpClient.class, this.name));
 
-    rawClient.setDispatcher(new Dispatcher(executorService));
+    rawClient = rawClient.newBuilder().dispatcher(new Dispatcher(executorService)).build();
   }
 
-  @Override public void setConnectTimeout(long timeout, TimeUnit unit) {
-    rawClient.setConnectTimeout(timeout, unit);
+  @Override public int connectTimeoutMillis() {
+    return rawClient.connectTimeoutMillis();
   }
 
-  @Override public int getConnectTimeout() {
-    return rawClient.getConnectTimeout();
+  @Override public int readTimeoutMillis() {
+    return rawClient.readTimeoutMillis();
   }
 
-  @Override public void setReadTimeout(long timeout, TimeUnit unit) {
-    rawClient.setReadTimeout(timeout, unit);
+  @Override public int writeTimeoutMillis() {
+    return rawClient.writeTimeoutMillis();
   }
 
-  @Override public int getReadTimeout() {
-    return rawClient.getReadTimeout();
+  @Override public Proxy proxy() {
+    return rawClient.proxy();
   }
 
-  @Override public void setWriteTimeout(long timeout, TimeUnit unit) {
-    rawClient.setWriteTimeout(timeout, unit);
+  @Override public Authenticator proxyAuthenticator() {
+    return rawClient.proxyAuthenticator();
   }
 
-  @Override public int getWriteTimeout() {
-    return rawClient.getWriteTimeout();
+  @Override public ProxySelector proxySelector() {
+    return rawClient.proxySelector();
   }
 
-  @Override public OkHttpClient setProxy(Proxy proxy) {
-    return rawClient.setProxy(proxy);
+  @Override public CookieJar cookieJar() {
+    return rawClient.cookieJar();
   }
 
-  @Override public Proxy getProxy() {
-    return rawClient.getProxy();
+  @Override public Cache cache() {
+    return rawClient.cache();
   }
 
-  @Override public OkHttpClient setProxySelector(ProxySelector proxySelector) {
-    return rawClient.setProxySelector(proxySelector);
+  @Override public Dns dns() {
+    return rawClient.dns();
   }
 
-  @Override public ProxySelector getProxySelector() {
-    return rawClient.getProxySelector();
+  @Override public SocketFactory socketFactory() {
+    return rawClient.socketFactory();
   }
 
-  @Override public OkHttpClient setCookieHandler(CookieHandler cookieHandler) {
-    return rawClient.setCookieHandler(cookieHandler);
+  @Override public SSLSocketFactory sslSocketFactory() {
+    return rawClient.sslSocketFactory();
   }
 
-  @Override public CookieHandler getCookieHandler() {
-    return rawClient.getCookieHandler();
+  @Override public HostnameVerifier hostnameVerifier() {
+    return rawClient.hostnameVerifier();
   }
 
-  @Override public OkHttpClient setCache(Cache cache) {
-    return rawClient.setCache(cache);
+  @Override public CertificatePinner certificatePinner() {
+    return rawClient.certificatePinner();
   }
 
-  @Override public Cache getCache() {
-    return rawClient.getCache();
+  @Override public Authenticator authenticator() {
+    return rawClient.authenticator();
   }
 
-  @Override public OkHttpClient setDns(Dns dns) {
-    return rawClient.setDns(dns);
+  @Override public ConnectionPool connectionPool() {
+    return rawClient.connectionPool();
   }
 
-  @Override public Dns getDns() {
-    return rawClient.getDns();
+  @Override public boolean followSslRedirects() {
+    return rawClient.followSslRedirects();
   }
 
-  @Override public OkHttpClient setSocketFactory(SocketFactory socketFactory) {
-    return rawClient.setSocketFactory(socketFactory);
+  @Override public boolean followRedirects() {
+    return rawClient.followRedirects();
   }
 
-  @Override public SocketFactory getSocketFactory() {
-    return rawClient.getSocketFactory();
+  @Override public boolean retryOnConnectionFailure() {
+    return rawClient.retryOnConnectionFailure();
   }
 
-  @Override public OkHttpClient setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
-    return rawClient.setSslSocketFactory(sslSocketFactory);
+  @Override public Dispatcher dispatcher() {
+    return rawClient.dispatcher();
   }
 
-  @Override public SSLSocketFactory getSslSocketFactory() {
-    return rawClient.getSslSocketFactory();
+  @Override public List<Protocol> protocols() {
+    return rawClient.protocols();
   }
 
-  @Override public OkHttpClient setHostnameVerifier(HostnameVerifier hostnameVerifier) {
-    return rawClient.setHostnameVerifier(hostnameVerifier);
-  }
-
-  @Override public HostnameVerifier getHostnameVerifier() {
-    return rawClient.getHostnameVerifier();
-  }
-
-  @Override public OkHttpClient setCertificatePinner(CertificatePinner certificatePinner) {
-    return rawClient.setCertificatePinner(certificatePinner);
-  }
-
-  @Override public CertificatePinner getCertificatePinner() {
-    return rawClient.getCertificatePinner();
-  }
-
-  @Override public OkHttpClient setAuthenticator(Authenticator authenticator) {
-    return rawClient.setAuthenticator(authenticator);
-  }
-
-  @Override public Authenticator getAuthenticator() {
-    return rawClient.getAuthenticator();
-  }
-
-  @Override public OkHttpClient setConnectionPool(ConnectionPool connectionPool) {
-    return rawClient.setConnectionPool(connectionPool);
-  }
-
-  @Override public ConnectionPool getConnectionPool() {
-    return rawClient.getConnectionPool();
-  }
-
-  @Override public OkHttpClient setFollowSslRedirects(boolean followProtocolRedirects) {
-    return rawClient.setFollowSslRedirects(followProtocolRedirects);
-  }
-
-  @Override public boolean getFollowSslRedirects() {
-    return rawClient.getFollowSslRedirects();
-  }
-
-  @Override public void setFollowRedirects(boolean followRedirects) {
-    rawClient.setFollowRedirects(followRedirects);
-  }
-
-  @Override public boolean getFollowRedirects() {
-    return rawClient.getFollowRedirects();
-  }
-
-  @Override public void setRetryOnConnectionFailure(boolean retryOnConnectionFailure) {
-    rawClient.setRetryOnConnectionFailure(retryOnConnectionFailure);
-  }
-
-  @Override public boolean getRetryOnConnectionFailure() {
-    return rawClient.getRetryOnConnectionFailure();
-  }
-
-  @Override public OkHttpClient setDispatcher(Dispatcher dispatcher) {
-    return rawClient.setDispatcher(dispatcher);
-  }
-
-  @Override public Dispatcher getDispatcher() {
-    return rawClient.getDispatcher();
-  }
-
-  @Override public OkHttpClient setProtocols(List<Protocol> protocols) {
-    return rawClient.setProtocols(protocols);
-  }
-
-  @Override public List<Protocol> getProtocols() {
-    return rawClient.getProtocols();
-  }
-
-  @Override public OkHttpClient setConnectionSpecs(List<ConnectionSpec> connectionSpecs) {
-    return rawClient.setConnectionSpecs(connectionSpecs);
-  }
-
-  @Override public List<ConnectionSpec> getConnectionSpecs() {
-    return rawClient.getConnectionSpecs();
+  @Override public List<ConnectionSpec> connectionSpecs() {
+    return rawClient.connectionSpecs();
   }
 
   @Override public List<Interceptor> interceptors() {
@@ -325,16 +250,20 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     return rawClient.networkInterceptors();
   }
 
+  @Override public OkHttpClient.Builder newBuilder() {
+    return rawClient.newBuilder();
+  }
+
   @Override public Call newCall(Request request) {
     return rawClient.newCall(request);
   }
 
-  @Override public OkHttpClient cancel(Object tag) {
-    return rawClient.cancel(tag);
+  @Override public WebSocket newWebSocket(Request request, WebSocketListener listener) {
+    return rawClient.newWebSocket(request, listener);
   }
 
-  @Override public OkHttpClient clone() {
-    return rawClient.clone();
+  @Override public int pingIntervalMillis() {
+    return rawClient.pingIntervalMillis();
   }
 
   @Override public boolean equals(Object obj) {

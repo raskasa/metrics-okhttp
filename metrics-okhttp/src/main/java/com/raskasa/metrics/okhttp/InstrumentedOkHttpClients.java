@@ -16,7 +16,7 @@
 package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.MetricRegistry;
-import com.squareup.okhttp.OkHttpClient;
+import okhttp3.OkHttpClient;
 
 /** Static factory methods for instrumenting an {@link OkHttpClient}. */
 public final class InstrumentedOkHttpClients {

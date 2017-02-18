@@ -41,7 +41,7 @@ final class InstrumentedExecutorService implements ExecutorService {
   private final Meter completed;
   private final Timer duration;
 
-  public InstrumentedExecutorService(ExecutorService delegate, MetricRegistry registry, String name) {
+  InstrumentedExecutorService(ExecutorService delegate, MetricRegistry registry, String name) {
     this.delegate = delegate;
     this.submitted = registry.meter(MetricRegistry.name(name, "network-requests-submitted"));
     this.running = registry.counter(MetricRegistry.name(name, "network-requests-running"));
