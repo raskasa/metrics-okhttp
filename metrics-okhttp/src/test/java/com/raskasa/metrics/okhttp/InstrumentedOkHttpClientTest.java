@@ -40,15 +40,12 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 public final class InstrumentedOkHttpClientTest {
-  private MetricRegistry mockRegistry;
   private MetricRegistry registry;
   private OkHttpClient rawClient;
 
   @Before public void setUp() throws Exception {
-    mockRegistry = mock(MetricRegistry.class);
     registry = new MetricRegistry();
     rawClient = new OkHttpClient();
   }
