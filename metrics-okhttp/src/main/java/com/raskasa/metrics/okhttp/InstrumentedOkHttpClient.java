@@ -158,88 +158,52 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     rawClient = rawClient.newBuilder().dispatcher(new Dispatcher(executorService)).build();
   }
 
-  @Override public int connectTimeoutMillis() {
-    return rawClient.connectTimeoutMillis();
-  }
-
-  @Override public int readTimeoutMillis() {
-    return rawClient.readTimeoutMillis();
-  }
-
-  @Override public int writeTimeoutMillis() {
-    return rawClient.writeTimeoutMillis();
-  }
-
-  @Override public Proxy proxy() {
-    return rawClient.proxy();
-  }
-
-  @Override public Authenticator proxyAuthenticator() {
-    return rawClient.proxyAuthenticator();
-  }
-
-  @Override public ProxySelector proxySelector() {
-    return rawClient.proxySelector();
-  }
-
-  @Override public CookieJar cookieJar() {
-    return rawClient.cookieJar();
+  @Override public Authenticator authenticator() {
+    return rawClient.authenticator();
   }
 
   @Override public Cache cache() {
     return rawClient.cache();
   }
 
-  @Override public Dns dns() {
-    return rawClient.dns();
-  }
-
-  @Override public SocketFactory socketFactory() {
-    return rawClient.socketFactory();
-  }
-
-  @Override public SSLSocketFactory sslSocketFactory() {
-    return rawClient.sslSocketFactory();
-  }
-
-  @Override public HostnameVerifier hostnameVerifier() {
-    return rawClient.hostnameVerifier();
-  }
-
   @Override public CertificatePinner certificatePinner() {
     return rawClient.certificatePinner();
-  }
-
-  @Override public Authenticator authenticator() {
-    return rawClient.authenticator();
   }
 
   @Override public ConnectionPool connectionPool() {
     return rawClient.connectionPool();
   }
 
-  @Override public boolean followSslRedirects() {
-    return rawClient.followSslRedirects();
+  @Override public List<ConnectionSpec> connectionSpecs() {
+    return rawClient.connectionSpecs();
   }
 
-  @Override public boolean followRedirects() {
-    return rawClient.followRedirects();
+  @Override public int connectTimeoutMillis() {
+    return rawClient.connectTimeoutMillis();
   }
 
-  @Override public boolean retryOnConnectionFailure() {
-    return rawClient.retryOnConnectionFailure();
+  @Override public CookieJar cookieJar() {
+    return rawClient.cookieJar();
   }
 
   @Override public Dispatcher dispatcher() {
     return rawClient.dispatcher();
   }
 
-  @Override public List<Protocol> protocols() {
-    return rawClient.protocols();
+  @Override public Dns dns() {
+    return rawClient.dns();
   }
 
-  @Override public List<ConnectionSpec> connectionSpecs() {
-    return rawClient.connectionSpecs();
+  @Override public boolean followRedirects() {
+    return rawClient.followRedirects();
+  }
+
+  @Override public boolean followSslRedirects() {
+    return rawClient.followSslRedirects();
+  }
+
+  @Override public HostnameVerifier hostnameVerifier() {
+    return rawClient.hostnameVerifier();
   }
 
   @Override public List<Interceptor> interceptors() {
@@ -264,6 +228,42 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
 
   @Override public int pingIntervalMillis() {
     return rawClient.pingIntervalMillis();
+  }
+
+  @Override public List<Protocol> protocols() {
+    return rawClient.protocols();
+  }
+
+  @Override public Proxy proxy() {
+    return rawClient.proxy();
+  }
+
+  @Override public Authenticator proxyAuthenticator() {
+    return rawClient.proxyAuthenticator();
+  }
+
+  @Override public ProxySelector proxySelector() {
+    return rawClient.proxySelector();
+  }
+
+  @Override public int readTimeoutMillis() {
+    return rawClient.readTimeoutMillis();
+  }
+
+  @Override public boolean retryOnConnectionFailure() {
+    return rawClient.retryOnConnectionFailure();
+  }
+
+  @Override public SocketFactory socketFactory() {
+    return rawClient.socketFactory();
+  }
+
+  @Override public SSLSocketFactory sslSocketFactory() {
+    return rawClient.sslSocketFactory();
+  }
+
+  @Override public int writeTimeoutMillis() {
+    return rawClient.writeTimeoutMillis();
   }
 
   @Override public boolean equals(Object obj) {
