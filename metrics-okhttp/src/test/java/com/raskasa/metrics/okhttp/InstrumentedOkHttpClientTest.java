@@ -17,17 +17,6 @@ package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.squareup.okhttp.Cache;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.ConnectionPool;
-import com.squareup.okhttp.ConnectionPoolProxy;
-import com.squareup.okhttp.Dispatcher;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -35,6 +24,16 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import okhttp3.Cache;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Dispatcher;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,11 +43,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 public final class InstrumentedOkHttpClientTest {
-  private Runnable emptyRunnable = new Runnable() {
-    @Override public void run() {
-    }
-  };
-
   private MetricRegistry mockRegistry;
   private MetricRegistry registry;
   private OkHttpClient rawClient;
@@ -72,7 +66,7 @@ public final class InstrumentedOkHttpClientTest {
     HttpUrl baseUrl = server.url("/");
 
     Cache cache = new Cache(cacheRule.getRoot(), Long.MAX_VALUE);
-    rawClient.setCache(cache);
+    rawClient = rawClient.newBuilder().cache(cache).build();
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getGauges()
@@ -90,7 +84,7 @@ public final class InstrumentedOkHttpClientTest {
     assertThat(registry.getGauges()
         .get(client.metricId("cache-current-size"))
         .getValue())
-        .isEqualTo(rawClient.getCache().getSize());
+        .isEqualTo(rawClient.cache().size());
 
     response.body().close();
   }
@@ -100,21 +94,14 @@ public final class InstrumentedOkHttpClientTest {
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
-    ConnectionPool pool = new ConnectionPool(Integer.MAX_VALUE, 100L);
-    new ConnectionPoolProxy(pool, emptyRunnable);  // Used so that the connection pool can be properly unit tested
-    rawClient.setConnectionPool(pool);
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-count"))
+        .get(client.metricId("connection-pool-total-count"))
         .getValue())
         .isEqualTo(0);
     assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-count-http"))
-        .getValue())
-        .isEqualTo(0);
-    assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-count-multiplexed"))
+        .get(client.metricId("connection-pool-idle-count"))
         .getValue())
         .isEqualTo(0);
 
@@ -124,21 +111,16 @@ public final class InstrumentedOkHttpClientTest {
     Response resp2 = client.newCall(req2).execute();
 
     assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-count"))
+        .get(client.metricId("connection-pool-total-count"))
         .getValue())
         .isEqualTo(2);
     assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-count-http"))
-        .getValue())
-        .isEqualTo(2);
-    assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-count-multiplexed"))
+        .get(client.metricId("connection-pool-idle-count"))
         .getValue())
         .isEqualTo(0);
 
     resp1.body().close();
     resp2.body().close();
-    pool.evictAll();
   }
 
   @Test public void executorServiceIsInstrumented() throws Exception {
@@ -146,7 +128,10 @@ public final class InstrumentedOkHttpClientTest {
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
-    rawClient.setDispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()));  // Force the requests to execute on this unit tests thread.
+    // Force the requests to execute on this unit tests thread.
+    rawClient = rawClient.newBuilder()
+        .dispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()))
+        .build();
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
     assertThat(registry.getMeters()
@@ -186,20 +171,6 @@ public final class InstrumentedOkHttpClientTest {
     assertThat(registry.getMeters().get(generatedId)).isNotNull();
   }
 
-  @Test public void equality() throws Exception {
-    InstrumentedOkHttpClient clientA = new InstrumentedOkHttpClient(mockRegistry, rawClient, null);
-    InstrumentedOkHttpClient clientB = new InstrumentedOkHttpClient(mockRegistry, rawClient, null);
-
-    assertThat(clientA).isEqualTo(clientB);
-    assertThat(clientA).isEqualTo(rawClient);
-    assertThat(clientB).isEqualTo(rawClient);
-  }
-
-  @Test public void stringRepresentation() throws Exception {
-    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(mockRegistry, rawClient, null);
-    assertThat(client.toString()).isEqualTo(rawClient.toString());
-  }
-
   /**
    * @param delta the offset from the current date to use. Negative
    * values yield dates in the past; positive values yield dates in the
@@ -216,10 +187,11 @@ public final class InstrumentedOkHttpClientTest {
   }
 
   private static final class TestCallback implements Callback {
-    @Override public void onFailure(Request request, IOException e) {
+    @Override public void onFailure(Call call, IOException e) {
+
     }
 
-    @Override public void onResponse(Response response) throws IOException {
+    @Override public void onResponse(Call call, Response response) throws IOException {
       response.body().close();
     }
   }

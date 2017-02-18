@@ -16,7 +16,7 @@
 package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.MetricRegistry;
-import com.squareup.okhttp.OkHttpClient;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,18 +34,18 @@ public final class InstrumentedOkHttpClientsTest {
     OkHttpClient client = InstrumentedOkHttpClients.create(registry);
 
     // The connection, read, and write timeouts are the only configurations applied by default.
-    assertThat(client.getConnectTimeout()).isEqualTo(10_000);
-    assertThat(client.getReadTimeout()).isEqualTo(10_000);
-    assertThat(client.getWriteTimeout()).isEqualTo(10_000);
+    assertThat(client.connectTimeoutMillis()).isEqualTo(10_000);
+    assertThat(client.readTimeoutMillis()).isEqualTo(10_000);
+    assertThat(client.writeTimeoutMillis()).isEqualTo(10_000);
   }
 
   @Test public void instrumentAndNameDefaultClient() {
     OkHttpClient client = InstrumentedOkHttpClients.create(registry, "custom");
 
     // The connection, read, and write timeouts are the only configurations applied by default.
-    assertThat(client.getConnectTimeout()).isEqualTo(10_000);
-    assertThat(client.getReadTimeout()).isEqualTo(10_000);
-    assertThat(client.getWriteTimeout()).isEqualTo(10_000);
+    assertThat(client.connectTimeoutMillis()).isEqualTo(10_000);
+    assertThat(client.readTimeoutMillis()).isEqualTo(10_000);
+    assertThat(client.writeTimeoutMillis()).isEqualTo(10_000);
   }
 
   @Test public void instrumentProvidedClient() {
@@ -61,24 +61,23 @@ public final class InstrumentedOkHttpClientsTest {
   }
 
   private void assertThatClientsAreEqual(OkHttpClient clientA, OkHttpClient clientB) {
-    assertThat(clientA.getDispatcher()).isEqualTo(clientB.getDispatcher());
-    assertThat(clientA.getProxy()).isEqualTo(clientB.getProxy());
-    assertThat(clientA.getProtocols()).isEqualTo(clientB.getProtocols());
-    assertThat(clientA.getConnectionSpecs()).isEqualTo(clientB.getConnectionSpecs());
-    assertThat(clientA.getProxySelector()).isEqualTo(clientB.getProxySelector());
-    assertThat(clientA.getCookieHandler()).isEqualTo(clientB.getCookieHandler());
-    assertThat(clientA.getCache()).isEqualTo(clientB.getCache());
-    assertThat(clientA.getSocketFactory()).isEqualTo(clientB.getSocketFactory());
-    assertThat(clientA.getSslSocketFactory()).isEqualTo(clientB.getSslSocketFactory());
-    assertThat(clientA.getHostnameVerifier()).isEqualTo(clientB.getHostnameVerifier());
-    assertThat(clientA.getCertificatePinner()).isEqualTo(clientB.getCertificatePinner());
-    assertThat(clientA.getAuthenticator()).isEqualTo(clientB.getAuthenticator());
-    assertThat(clientA.getConnectionPool()).isEqualTo(clientB.getConnectionPool());
-    assertThat(clientA.getFollowSslRedirects()).isEqualTo(clientB.getFollowSslRedirects());
-    assertThat(clientA.getFollowRedirects()).isEqualTo(clientB.getFollowRedirects());
-    assertThat(clientA.getRetryOnConnectionFailure()).isEqualTo(clientB.getRetryOnConnectionFailure());
-    assertThat(clientA.getConnectTimeout()).isEqualTo(clientB.getConnectTimeout());
-    assertThat(clientA.getReadTimeout()).isEqualTo(clientB.getReadTimeout());
-    assertThat(clientA.getWriteTimeout()).isEqualTo(clientB.getWriteTimeout());
+    assertThat(clientA.proxy()).isEqualTo(clientB.proxy());
+    assertThat(clientA.protocols()).isEqualTo(clientB.protocols());
+    assertThat(clientA.connectionSpecs()).isEqualTo(clientB.connectionSpecs());
+    assertThat(clientA.proxySelector()).isEqualTo(clientB.proxySelector());
+    assertThat(clientA.cookieJar()).isEqualTo(clientB.cookieJar());
+    assertThat(clientA.cache()).isEqualTo(clientB.cache());
+    assertThat(clientA.socketFactory()).isEqualTo(clientB.socketFactory());
+    assertThat(clientA.sslSocketFactory()).isEqualTo(clientB.sslSocketFactory());
+    assertThat(clientA.hostnameVerifier()).isEqualTo(clientB.hostnameVerifier());
+    assertThat(clientA.certificatePinner()).isEqualTo(clientB.certificatePinner());
+    assertThat(clientA.authenticator()).isEqualTo(clientB.authenticator());
+    assertThat(clientA.connectionPool()).isEqualTo(clientB.connectionPool());
+    assertThat(clientA.followSslRedirects()).isEqualTo(clientB.followSslRedirects());
+    assertThat(clientA.followRedirects()).isEqualTo(clientB.followRedirects());
+    assertThat(clientA.retryOnConnectionFailure()).isEqualTo(clientB.retryOnConnectionFailure());
+    assertThat(clientA.connectTimeoutMillis()).isEqualTo(clientB.connectTimeoutMillis());
+    assertThat(clientA.readTimeoutMillis()).isEqualTo(clientB.readTimeoutMillis());
+    assertThat(clientA.writeTimeoutMillis()).isEqualTo(clientB.writeTimeoutMillis());
   }
 }
