@@ -68,11 +68,18 @@ public final class InstrumentedOkHttpClientsTest {
     assertThat(clientA.connectionSpecs()).isEqualTo(clientB.connectionSpecs());
     assertThat(clientA.connectTimeoutMillis()).isEqualTo(clientB.connectTimeoutMillis());
     assertThat(clientA.cookieJar()).isEqualTo(clientB.cookieJar());
+    // We don't assert on Dispatcher since we create a new instance during instrumentation.
+    assertThat(clientA.dns()).isEqualTo(clientB.dns());
     assertThat(clientA.followRedirects()).isEqualTo(clientB.followRedirects());
     assertThat(clientA.followSslRedirects()).isEqualTo(clientB.followSslRedirects());
     assertThat(clientA.hostnameVerifier()).isEqualTo(clientB.hostnameVerifier());
+    assertThat(clientA.interceptors().size()).isEqualTo(clientB.interceptors().size());
+    assertThat(clientA.networkInterceptors().size())
+        .isEqualTo(clientB.networkInterceptors().size());
+    assertThat(clientA.pingIntervalMillis()).isEqualTo(clientB.pingIntervalMillis());
     assertThat(clientA.protocols()).isEqualTo(clientB.protocols());
     assertThat(clientA.proxy()).isEqualTo(clientB.proxy());
+    assertThat(clientA.proxyAuthenticator()).isEqualTo(clientB.proxyAuthenticator());
     assertThat(clientA.proxySelector()).isEqualTo(clientB.proxySelector());
     assertThat(clientA.readTimeoutMillis()).isEqualTo(clientB.readTimeoutMillis());
     assertThat(clientA.retryOnConnectionFailure()).isEqualTo(clientB.retryOnConnectionFailure());
