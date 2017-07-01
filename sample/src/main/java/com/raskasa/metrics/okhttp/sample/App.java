@@ -29,13 +29,8 @@ public final class App {
           .url("https://api.github.com/repos/raskasa/metrics-okhttp")
           .build();
 
-      Response response = client.newCall(request).execute();
-
-      ResponseBody body = response.body();
-      if (body != null) {
-        System.out.println(body.string());
-      } else {
-        throw new RuntimeException("Body not expected to be closed");
+      try (Response response = client.newCall(request).execute()) {
+        System.out.println(response.body().string());
       }
 
       Thread.sleep(15_000);  // 15 seconds
