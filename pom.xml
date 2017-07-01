@@ -16,6 +16,7 @@
 
   <modules>
     <module>metrics-okhttp</module>
+    <module>sample</module>
   </modules>
 
   <properties>
