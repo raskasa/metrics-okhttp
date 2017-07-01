@@ -156,15 +156,14 @@ public final class InstrumentedOkHttpClientTest {
   }
 
   @Test public void providedNameUsedInMetricId() {
-    String randomMetric = "network-requests-submitted";
+    String prefix = "custom";
+    String baseId = "network-requests-submitted";
+
     assertThat(registry.getMeters()).isEmpty();
 
-    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
-    String generatedId = client.metricId(randomMetric);
-    assertThat(registry.getMeters().get(generatedId)).isNotNull();
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, prefix);
+    String generatedId = client.metricId(baseId);
 
-    client = new InstrumentedOkHttpClient(registry, rawClient, "custom");
-    generatedId = client.metricId(randomMetric);
     assertThat(registry.getMeters().get(generatedId)).isNotNull();
   }
 
