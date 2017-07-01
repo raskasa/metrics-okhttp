@@ -42,21 +42,21 @@ OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient, "cus
 An instrumented OkHttp HTTP client provides the following metrics:
 
 ```
-com.squareup.okhttp.OkHttpClient.cache-request-count
-com.squareup.okhttp.OkHttpClient.cache-hit-count
-com.squareup.okhttp.OkHttpClient.cache-network-count
-com.squareup.okhttp.OkHttpClient.cache-current-size
-com.squareup.okhttp.OkHttpClient.cache-max-size
-com.squareup.okhttp.OkHttpClient.cache-size
-com.squareup.okhttp.OkHttpClient.cache-write-success-count
-com.squareup.okhttp.OkHttpClient.cache-write-abort-count
-com.squareup.okhttp.OkHttpClient.connection-pool-count
-com.squareup.okhttp.OkHttpClient.connection-pool-count-http
-com.squareup.okhttp.OkHttpClient.connection-pool-count-multiplexed
-com.squareup.okhttp.OkHttpClient.network-requests-completed
-com.squareup.okhttp.OkHttpClient.network-requests-duration
-com.squareup.okhttp.OkHttpClient.network-requests-running
-com.squareup.okhttp.OkHttpClient.network-requests-submitted
+okhttp3.OkHttpClient.cache-request-count
+okhttp3.OkHttpClient.cache-hit-count
+okhttp3.OkHttpClient.cache-network-count
+okhttp3.OkHttpClient.cache-current-size
+okhttp3.OkHttpClient.cache-max-size
+okhttp3.OkHttpClient.cache-size
+okhttp3.OkHttpClient.cache-write-success-count
+okhttp3.OkHttpClient.cache-write-abort-count
+okhttp3.OkHttpClient.connection-pool-count
+okhttp3.OkHttpClient.connection-pool-count-http
+okhttp3.OkHttpClient.connection-pool-count-multiplexed
+okhttp3.OkHttpClient.network-requests-completed
+okhttp3.OkHttpClient.network-requests-duration
+okhttp3.OkHttpClient.network-requests-running
+okhttp3.OkHttpClient.network-requests-submitted
 ```
 
 If you provide a custom name for the instrumented client (i.e. `custom-name`),
@@ -64,9 +64,9 @@ the metrics will have the following format:
 
 ```
 ...
-com.squareup.okhttp.OkHttpClient.custom-name.cache-write-success-count
-com.squareup.okhttp.OkHttpClient.custom-name.cache-write-abort-count
-com.squareup.okhttp.OkHttpClient.custom-name.connection-pool-count
+okhttp3.OkHttpClient.custom-name.cache-write-success-count
+okhttp3.OkHttpClient.custom-name.cache-write-abort-count
+okhttp3.OkHttpClient.custom-name.connection-pool-count
 ...
 ```
 
