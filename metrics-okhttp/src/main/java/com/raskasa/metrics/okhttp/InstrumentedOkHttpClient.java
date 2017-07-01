@@ -58,7 +58,7 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     this.name = name;
     instrumentHttpCache();
     instrumentConnectionPool();
-    instrumentExecutorService();
+    instrumentNetworkRequests();
   }
 
   /**
@@ -149,13 +149,11 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     });
   }
 
-  private void instrumentExecutorService() {
-    InstrumentedExecutorService executorService = new InstrumentedExecutorService(
-        rawClient.dispatcher().executorService(),
-        registry,
-        name(OkHttpClient.class, this.name));
-
-    rawClient = rawClient.newBuilder().dispatcher(new Dispatcher(executorService)).build();
+  private void instrumentNetworkRequests() {
+    rawClient = rawClient.newBuilder()
+        .addNetworkInterceptor(
+            new InstrumentedInterceptor(registry, name(OkHttpClient.class, this.name)))
+        .build();
   }
 
   @Override public Authenticator authenticator() {
