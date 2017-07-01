@@ -40,6 +40,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 public final class InstrumentedOkHttpClientTest {
   private MetricRegistry registry;
@@ -52,6 +53,114 @@ public final class InstrumentedOkHttpClientTest {
 
   @Rule public MockWebServer server = new MockWebServer();
   @Rule public TemporaryFolder cacheRule = new TemporaryFolder();
+
+  @Test public void syncNetworkRequestsAreInstrumented() throws IOException {
+    MockResponse mockResponse = new MockResponse()
+        .addHeader("Cache-Control:public, max-age=31536000")
+        .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
+        .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
+        .setBody("one");
+    server.enqueue(mockResponse);
+    HttpUrl baseUrl = server.url("/");
+
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
+
+    assertThat(registry.getMeters()
+        .get(client.metricId("network-requests-submitted"))
+        .getCount())
+        .isEqualTo(0);
+    assertThat(registry.getCounters()
+        .get(client.metricId("network-requests-running"))
+        .getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters()
+        .get(client.metricId("network-requests-completed"))
+        .getCount())
+        .isEqualTo(0);
+    assertThat(registry.getTimers()
+        .get(client.metricId("network-requests-duration"))
+        .getCount())
+        .isEqualTo(0);
+
+    Request request = new Request.Builder().url(baseUrl).build();
+
+    try (Response response = client.newCall(request).execute()) {
+      assertThat(registry.getMeters()
+          .get(client.metricId("network-requests-submitted"))
+          .getCount())
+          .isEqualTo(1);
+      assertThat(registry.getCounters()
+          .get(client.metricId("network-requests-running"))
+          .getCount())
+          .isEqualTo(0);
+      assertThat(registry.getMeters()
+          .get(client.metricId("network-requests-completed"))
+          .getCount())
+          .isEqualTo(1);
+      assertThat(registry.getTimers()
+          .get(client.metricId("network-requests-duration"))
+          .getCount())
+          .isEqualTo(1);
+    }
+  }
+
+  @Test public void aSyncNetworkRequestsAreInstrumented() {
+    MockResponse mockResponse = new MockResponse()
+        .addHeader("Cache-Control:public, max-age=31536000")
+        .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
+        .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
+        .setBody("one");
+    server.enqueue(mockResponse);
+    HttpUrl baseUrl = server.url("/");
+
+    final InstrumentedOkHttpClient client =
+        new InstrumentedOkHttpClient(registry, rawClient, null);
+
+    assertThat(registry.getMeters()
+        .get(client.metricId("network-requests-submitted"))
+        .getCount())
+        .isEqualTo(0);
+    assertThat(registry.getCounters()
+        .get(client.metricId("network-requests-running"))
+        .getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters()
+        .get(client.metricId("network-requests-completed"))
+        .getCount())
+        .isEqualTo(0);
+    assertThat(registry.getTimers()
+        .get(client.metricId("network-requests-duration"))
+        .getCount())
+        .isEqualTo(0);
+
+    final Request request = new Request.Builder().url(baseUrl).build();
+
+    client.newCall(request).enqueue(new Callback() {
+      @Override public void onFailure(Call call, IOException e) {
+        fail();
+      }
+
+      @Override public void onResponse(Call call, Response response) throws IOException {
+        assertThat(registry.getMeters()
+            .get(client.metricId("network-requests-submitted"))
+            .getCount())
+            .isEqualTo(1);
+        assertThat(registry.getCounters()
+            .get(client.metricId("network-requests-running"))
+            .getCount())
+            .isEqualTo(0);
+        assertThat(registry.getMeters()
+            .get(client.metricId("network-requests-completed"))
+            .getCount())
+            .isEqualTo(1);
+        assertThat(registry.getTimers()
+            .get(client.metricId("network-requests-duration"))
+            .getCount())
+            .isEqualTo(1);
+        response.body().close();
+      }
+    });
+  }
 
   @Test public void httpCacheIsInstrumented() throws Exception {
     MockResponse mockResponse = new MockResponse()

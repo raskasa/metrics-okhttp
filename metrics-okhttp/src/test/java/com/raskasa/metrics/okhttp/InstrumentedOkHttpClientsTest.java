@@ -74,8 +74,6 @@ public final class InstrumentedOkHttpClientsTest {
     assertThat(clientA.followSslRedirects()).isEqualTo(clientB.followSslRedirects());
     assertThat(clientA.hostnameVerifier()).isEqualTo(clientB.hostnameVerifier());
     assertThat(clientA.interceptors().size()).isEqualTo(clientB.interceptors().size());
-    assertThat(clientA.networkInterceptors().size())
-        .isEqualTo(clientB.networkInterceptors().size());
     assertThat(clientA.pingIntervalMillis()).isEqualTo(clientB.pingIntervalMillis());
     assertThat(clientA.protocols()).isEqualTo(clientB.protocols());
     assertThat(clientA.proxy()).isEqualTo(clientB.proxy());
