@@ -82,14 +82,14 @@ Download [the latest jar][metrics-okhttp] or depend on Maven:
 <dependency>
   <groupId>com.raskasa.metrics</groupId>
   <artifactId>metrics-okhttp</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 
 or Gradle:
 
 ```groovy
-compile 'com.raskasa.metrics:metrics-okhttp:0.3.0'
+compile 'com.raskasa.metrics:metrics-okhttp:0.4.0'
 ```
 
 Snapshots of the development version are available in
