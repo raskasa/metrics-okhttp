@@ -82,14 +82,14 @@ Download [the latest jar][metrics-okhttp] or depend on Maven:
 <dependency>
   <groupId>com.raskasa.metrics</groupId>
   <artifactId>metrics-okhttp</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
 or Gradle:
 
 ```groovy
-compile 'com.raskasa.metrics:metrics-okhttp:0.2.0'
+compile 'com.raskasa.metrics:metrics-okhttp:0.3.0'
 ```
 
 Snapshots of the development version are available in
@@ -112,7 +112,7 @@ License
     See the License for the specific language governing permissions and
     limitations under the License.
   
-  [metrics]: https://dropwizard.github.io/metrics/3.1.0/
+  [metrics]: https://dropwizard.github.io/metrics/3.2.3/
   [metrics-okhttp]: https://search.maven.org/remote_content?g=com.raskasa.metrics&a=metrics-okhttp&v=LATEST
   [okhttp]: http://square.github.io/okhttp/
   [sonatype]: https://oss.sonatype.org/content/repositories/snapshots/com/raskasa/metrics/

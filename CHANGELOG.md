@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+## Version 0.3.0
+
+_2017-11-10_
+
+* __Support OkHttp 3.x__
+* Fix: Rewrite network request instrumentation with interceptors.  The
+instrumented executor service is only used when executing asynchronous
+requests - it is not used when executing synchronous requests.  By using
+interceptors, we can record metrics all requests regardless of whether they are
+synchronous or asynchronous.
+* Other minor changes. 
+
 ## Version 0.2.0
 
 _2015-12-14_
