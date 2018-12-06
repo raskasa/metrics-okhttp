@@ -10,7 +10,7 @@
 
   <groupId>com.raskasa.metrics</groupId>
   <artifactId>metrics-okhttp-parent</artifactId>
-  <version>0.5.1</version>
+  <version>0.5.0-PP</version>
   <packaging>pom</packaging>
   <name>Metrics Integration for OkHttp (Parent)</name>
 
