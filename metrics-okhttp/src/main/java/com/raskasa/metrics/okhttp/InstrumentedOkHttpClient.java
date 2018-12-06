@@ -147,7 +147,7 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
 
   private void instrumentConnectionListener() {
     rawClient = rawClient.newBuilder()
-            .eventListener(new ConnectionInterceptor(registry, name))
+            .eventListener(new ConnectionInterceptor(registry, name(OkHttpClient.class, this.name)))
             .build();
 
   }
