@@ -1,0 +1,29 @@
+language: java
+
+jdk:
+  - oraclejdk8
+
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer # Updates JDK 8 to the latest available.
+
+after_success:
+  - .buildscript/deploy.sh
+
+env:
+  global:
+    - secure: "feCisjPHzMJ5W2lF1hVxWt9RLBw5GoRvhfc/tHLk/Rc3UkPJuTeHhUxLcbKh7F4s3nzelCRa1reL04BxKUKo2GM19aIbJzk48l6h5BJFe1oDzqzHbfA/WGfgo+72BnAsfxEIFrB/Gpi+L0itko1Pz8mg8KqYUSqWnpJPMoz9grY="
+
+branches:
+  except:
+    - gh-pages
+
+notifications:
+  email: false
+
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.m2
