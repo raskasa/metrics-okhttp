@@ -19,27 +19,15 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.RatioGauge;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.List;
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
-import okhttp3.Authenticator;
-import okhttp3.Cache;
-import okhttp3.Call;
-import okhttp3.CertificatePinner;
-import okhttp3.ConnectionPool;
-import okhttp3.ConnectionSpec;
-import okhttp3.CookieJar;
-import okhttp3.Dispatcher;
-import okhttp3.Dns;
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
-import okhttp3.Request;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
+
+import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +47,7 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     instrumentHttpCache();
     instrumentConnectionPool();
     instrumentNetworkRequests();
+    instrumentConnectionListener();
   }
 
   /**
@@ -154,6 +143,13 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
         .addNetworkInterceptor(
             new InstrumentedInterceptor(registry, name(OkHttpClient.class, this.name)))
         .build();
+  }
+
+  private void instrumentConnectionListener() {
+    rawClient = rawClient.newBuilder()
+            .eventListener(new ConnectionInterceptor(registry, name))
+            .build();
+
   }
 
   @Override public Authenticator authenticator() {
