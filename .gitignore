@@ -1,0 +1,8 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea
+target
+*.ipr
+*.iml
+*.iws
+dependency-reduced-pom.xml
+.DS_Store
