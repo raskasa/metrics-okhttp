@@ -46,6 +46,7 @@ final class ConnectionInterceptor extends EventListener {
         Long initTime = initTimes.get(inetSocketAddress);
         if (initTime != null) {
             setupTimes.update(System.currentTimeMillis() - initTime);
+            initTimes.remove(inetSocketAddress);
         }
     }
 
