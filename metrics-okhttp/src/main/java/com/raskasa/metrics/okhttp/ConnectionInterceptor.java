@@ -38,14 +38,14 @@ final class ConnectionInterceptor extends EventListener {
     @Override
     public void connectStart(Call call, InetSocketAddress inetSocketAddress, Proxy proxy) {
         requests.mark();
-        initTimes.put(inetSocketAddress, System.currentTimeMillis());
+        initTimes.put(inetSocketAddress, System.nanoTime());
     }
 
     @Override
     public void connectEnd(Call call, InetSocketAddress inetSocketAddress, Proxy proxy, Protocol protocol) {
         Long initTime = initTimes.get(inetSocketAddress);
         if (initTime != null) {
-            setupTimes.update(System.currentTimeMillis() - initTime);
+            setupTimes.update(System.nanoTime() - initTime);
             initTimes.remove(inetSocketAddress);
         }
     }
