@@ -14,17 +14,6 @@
   <packaging>pom</packaging>
   <name>Metrics Integration for OkHttp (Parent)</name>
 
-  <distributionManagement>
-    <repository>
-      <id>phonepe-releases</id>
-      <url>http://artifactory.phonepe.com/content/repositories/releases</url>
-    </repository>
-    <snapshotRepository>
-      <id>phonepe-snapshots</id>
-      <url>http://artifactory.phonepe.com/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
-
   <modules>
     <module>metrics-okhttp</module>
     <module>sample</module>
