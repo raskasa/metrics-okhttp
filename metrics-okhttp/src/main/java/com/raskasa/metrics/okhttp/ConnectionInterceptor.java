@@ -3,19 +3,16 @@ package com.raskasa.metrics.okhttp;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
 import okhttp3.*;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * An {@link Interceptor} that monitors the number of submitted, running, and
- * completed network requests.  Also, keeps a {@link Timer} for the request
- * duration.
+ * An {@link Interceptor} that monitors the number of submitted, running,
+ * completed network requests and measures connection setup times.
  */
 final class ConnectionInterceptor extends EventListener {
     private final Meter requests;
@@ -30,9 +27,11 @@ final class ConnectionInterceptor extends EventListener {
         this.failed = registry.meter(MetricRegistry.name(name, "connection-failed"));
         this.acquired = registry.meter(MetricRegistry.name(name, "connection-acquired"));
         this.released = registry.meter(MetricRegistry.name(name, "connection-released"));
+        // Use a histogram to capture the connection setup times (tcp + ssl handshake)
+        // This will provide visibility on the latencies incurred in the underlying network infrastructure
+        // as well as server load
         this.setupTimes = registry.histogram(MetricRegistry.name(name, "connection-setup"));
-        // TODO: configure map on the basis of connection pool size
-        this.initTimes = new ConcurrentHashMap<>(128, 0.75f, 16);
+        this.initTimes = new ConcurrentHashMap<>(128, 0.75f);
     }
 
     @Override
@@ -43,16 +42,13 @@ final class ConnectionInterceptor extends EventListener {
 
     @Override
     public void connectEnd(Call call, InetSocketAddress inetSocketAddress, Proxy proxy, Protocol protocol) {
-        Long initTime = initTimes.get(inetSocketAddress);
-        if (initTime != null) {
-            setupTimes.update(System.nanoTime() - initTime);
-            initTimes.remove(inetSocketAddress);
-        }
+        updateSetupTime(inetSocketAddress);
     }
 
     @Override
     public void connectFailed(Call call, InetSocketAddress inetSocketAddress, Proxy proxy, Protocol protocol, IOException ioe) {
         failed.mark();
+        updateSetupTime(inetSocketAddress);
     }
 
     @Override
@@ -63,5 +59,14 @@ final class ConnectionInterceptor extends EventListener {
     @Override
     public void connectionReleased(Call call, Connection connection) {
         released.mark();
+    }
+
+    private void updateSetupTime(final InetSocketAddress inetSocketAddress) {
+        Long initTime = initTimes.get(inetSocketAddress);
+        if (initTime != null) {
+            // always remove from map first before updating histogram for some exception may be thrown
+            initTimes.remove(inetSocketAddress);
+            setupTimes.update(System.nanoTime() - initTime);
+        }
     }
 }
