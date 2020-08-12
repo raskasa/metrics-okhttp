@@ -3,7 +3,11 @@ package com.raskasa.metrics.okhttp;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import okhttp3.*;
+import okhttp3.Call;
+import okhttp3.Connection;
+import okhttp3.EventListener;
+import okhttp3.Interceptor;
+import okhttp3.Protocol;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -14,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * An {@link Interceptor} that monitors the number of submitted, running,
  * completed network requests and measures connection setup times.
  */
-final class ConnectionInterceptor extends EventListener {
+public final class ConnectionInterceptor extends EventListener {
     private final Meter requests;
     private final Meter failed;
     private final Meter acquired;
@@ -22,7 +26,8 @@ final class ConnectionInterceptor extends EventListener {
     private final Histogram setupTimes;
     private final ConcurrentHashMap<InetSocketAddress, Long> initTimes;
 
-    ConnectionInterceptor(MetricRegistry registry, String name) {
+    ConnectionInterceptor(final MetricRegistry registry,
+                          final String name) {
         this.requests = registry.meter(MetricRegistry.name(name, "connection-requests"));
         this.failed = registry.meter(MetricRegistry.name(name, "connection-failed"));
         this.acquired = registry.meter(MetricRegistry.name(name, "connection-acquired"));
@@ -48,7 +53,8 @@ final class ConnectionInterceptor extends EventListener {
     }
 
     @Override
-    public void connectFailed(Call call, InetSocketAddress inetSocketAddress, Proxy proxy, Protocol protocol, IOException ioe) {
+    public void connectFailed(Call call, InetSocketAddress inetSocketAddress, Proxy proxy, Protocol protocol,
+                              IOException ioe) {
         initTimes.remove(inetSocketAddress);
         failed.mark();
     }
@@ -66,7 +72,7 @@ final class ConnectionInterceptor extends EventListener {
     private void updateSetupTime(final InetSocketAddress inetSocketAddress) {
         Long initTime = initTimes.get(inetSocketAddress);
         if (initTime != null) {
-            // always remove from map first before updating histogram for some exception may be thrown
+            // Always remove from map first before updating histogram for some exception may be thrown
             initTimes.remove(inetSocketAddress);
             setupTimes.update(System.nanoTime() - initTime);
         }
