@@ -19,7 +19,7 @@ public class WrappedEventListener extends EventListener {
 
     private final List<EventListener> eventListeners;
 
-    public WrappedEventListener(List<EventListener> eventListeners) {
+    public WrappedEventListener(final List<EventListener> eventListeners) {
         this.eventListeners = eventListeners;
     }
 

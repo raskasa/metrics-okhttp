@@ -21,6 +21,7 @@ import com.codahale.metrics.RatioGauge;
 import java.io.IOException;
 import java.net.Proxy;
 import java.net.ProxySelector;
+import java.util.ArrayList;
 import java.util.List;
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
@@ -145,10 +146,14 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentConnectionListener() {
-      EventListener.Factory rawFactory = rawClient.eventListenerFactory();
-      ConnectionInterceptor connectionInterceptor = new ConnectionInterceptor(registry, name(OkHttpClient.class, this.name));
-      rawClient = rawClient.newBuilder()
-              .eventListenerFactory(new WrappedEventListenerFactory(rawFactory, connectionInterceptor))
+    List<EventListener.Factory> factories = new ArrayList<>();
+    factories.add(call -> new ConnectionInterceptor(registry, name(OkHttpClient.class, this.name)));
+    EventListener.Factory rawFactory = rawClient.eventListenerFactory();
+    if (rawFactory != null){
+      factories.add(rawFactory);
+    }
+    rawClient = rawClient.newBuilder()
+            .eventListenerFactory(new WrappedEventListenerFactory(factories))
               .build();
   }
 
