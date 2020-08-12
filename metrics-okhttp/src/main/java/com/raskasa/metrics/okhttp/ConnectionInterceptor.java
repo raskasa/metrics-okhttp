@@ -27,9 +27,11 @@ final class ConnectionInterceptor extends EventListener {
         this.failed = registry.meter(MetricRegistry.name(name, "connection-failed"));
         this.acquired = registry.meter(MetricRegistry.name(name, "connection-acquired"));
         this.released = registry.meter(MetricRegistry.name(name, "connection-released"));
-        // Use a histogram to capture the connection setup times (tcp + ssl handshake)
-        // This will provide visibility on the latencies incurred in the underlying network infrastructure
-        // as well as server load
+        /*
+        Use a histogram to capture the connection setup times (tcp + ssl handshake) for successful connection attempts
+        This will provide visibility on the latencies incurred in the underlying network infrastructure
+        as well as server load.
+        */
         this.setupTimes = registry.histogram(MetricRegistry.name(name, "connection-setup"));
         this.initTimes = new ConcurrentHashMap<>(128, 0.75f);
     }
