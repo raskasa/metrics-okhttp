@@ -47,8 +47,8 @@ final class ConnectionInterceptor extends EventListener {
 
     @Override
     public void connectFailed(Call call, InetSocketAddress inetSocketAddress, Proxy proxy, Protocol protocol, IOException ioe) {
-        failed.mark();
         initTimes.remove(inetSocketAddress);
+        failed.mark();
     }
 
     @Override
