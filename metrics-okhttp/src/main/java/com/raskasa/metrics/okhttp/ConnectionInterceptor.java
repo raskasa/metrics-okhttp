@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * An {@link Interceptor} that monitors the number of submitted, running,
  * completed network requests and measures connection setup times.
  */
-public final class ConnectionInterceptor extends EventListener {
+final class ConnectionInterceptor extends EventListener {
     private final Meter requests;
     private final Meter failed;
     private final Meter acquired;

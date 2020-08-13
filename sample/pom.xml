@@ -5,7 +5,7 @@
   <parent>
     <artifactId>metrics-okhttp-parent</artifactId>
     <groupId>com.raskasa.metrics</groupId>
-    <version>0.5.4-PP-SNAPSHOT</version>
+    <version>0.5.4-PP</version>
   </parent>
 
   <artifactId>sample</artifactId>
