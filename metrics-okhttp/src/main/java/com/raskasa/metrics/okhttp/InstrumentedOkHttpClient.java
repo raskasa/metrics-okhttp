@@ -27,6 +27,7 @@ import okhttp3.ConnectionSpec;
 import okhttp3.CookieJar;
 import okhttp3.Dispatcher;
 import okhttp3.Dns;
+import okhttp3.EventListener;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -42,6 +43,7 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.Proxy;
 import java.net.ProxySelector;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -159,10 +161,15 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentConnectionListener() {
+    final List<EventListener.Factory> factories = new ArrayList<>();
+    factories.add(call -> new ConnectionInterceptor(registry, name(OkHttpClient.class, this.name)));
+    final EventListener.Factory rawFactory = rawClient.eventListenerFactory();
+    if (rawFactory != null){
+      factories.add(rawFactory);
+    }
     rawClient = rawClient.newBuilder()
-            .eventListener(new ConnectionInterceptor(registry, name(OkHttpClient.class, this.name)))
-            .build();
-
+            .eventListenerFactory(new WrappedEventListenerFactory(factories))
+              .build();
   }
 
   @Override public Authenticator authenticator() {
