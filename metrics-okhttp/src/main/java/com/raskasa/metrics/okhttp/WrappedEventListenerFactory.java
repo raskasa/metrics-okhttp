@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /*
 This class wraps event listener factory so that an additional metric event listener can be added.
  */
-public class WrappedEventListenerFactory implements EventListener.Factory {
+final class WrappedEventListenerFactory implements EventListener.Factory {
 
     private final List<EventListener.Factory> factories;
 

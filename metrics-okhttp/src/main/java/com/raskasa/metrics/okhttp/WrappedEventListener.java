@@ -15,7 +15,7 @@ import java.net.Proxy;
 import java.util.List;
 
 
-public class WrappedEventListener extends EventListener {
+final class WrappedEventListener extends EventListener {
 
     private final List<EventListener> eventListeners;
 
