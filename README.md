@@ -53,10 +53,16 @@ okhttp3.OkHttpClient.cache-write-abort-count
 okhttp3.OkHttpClient.connection-pool-count
 okhttp3.OkHttpClient.connection-pool-count-http
 okhttp3.OkHttpClient.connection-pool-count-multiplexed
+okhttp3.OkHttpClient.connection-pool-idle-count
+okhttp3.OkHttpClient.connection-pool-total-count
 okhttp3.OkHttpClient.network-requests-completed
 okhttp3.OkHttpClient.network-requests-duration
 okhttp3.OkHttpClient.network-requests-running
 okhttp3.OkHttpClient.network-requests-submitted
+okhttp3.OkHttpClient.connection-requests
+okhttp3.OkHttpClient.connection-failed
+okhttp3.OkHttpClient.connection-acquired
+okhttp3.OkHttpClient.connection-released
 ```
 
 If you provide a custom name for the instrumented client (i.e. `custom-name`),
