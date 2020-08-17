@@ -6,8 +6,10 @@ import okhttp3.EventListener;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/*
-This class wraps event listener factory so that an additional metric event listener can be added.
+/**
+ * okhttp supports exactly one {@link EventListener.Factory} to be attached. In order to support multiple listeners,
+ * this class wraps multiple {@link EventListener.Factory} instances and combines them to create
+ * {@link WrappedEventListener}
  */
 final class WrappedEventListenerFactory implements EventListener.Factory {
 
