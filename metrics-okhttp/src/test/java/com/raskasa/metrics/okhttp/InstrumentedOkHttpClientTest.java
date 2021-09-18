@@ -252,6 +252,9 @@ public final class InstrumentedOkHttpClientTest {
             .get(client.metricId("connection-released"))
             .getCount())
             .isEqualTo(0);
+    assertThat(registry.getHistograms()
+            .get(client.metricId("connection-setup")))
+            .isNull();
 
     Request req1 = new Request.Builder().url(baseUrl).build();
     Request req2 = new Request.Builder().url(baseUrl).build();
@@ -276,6 +279,10 @@ public final class InstrumentedOkHttpClientTest {
     assertThat(registry.getMeters()
             .get(client.metricId("connection-released"))
             .getCount())
+            .isEqualTo(2);
+    assertThat(registry.getHistograms()
+            .get(client.metricId("connection-setup"))
+            .getSnapshot().size())
             .isEqualTo(2);
 
   }
