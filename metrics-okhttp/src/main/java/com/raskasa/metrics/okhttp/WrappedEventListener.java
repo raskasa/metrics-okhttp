@@ -14,7 +14,10 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.List;
 
-
+/**
+ * This listener wraps multiple other listeners. This is required since okhttp only allows one listener to be attached
+ * by default and we wouldn't want metric listener to override user provided listener of the raw client
+ */
 final class WrappedEventListener extends EventListener {
 
     private final List<EventListener> eventListeners;
