@@ -161,8 +161,10 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
   }
 
   private void instrumentConnectionListener() {
+    final ConnectionRequestCounter requestListener = new ConnectionRequestCounter(registry, name(OkHttpClient.class, this.name));
     final List<EventListener.Factory> factories = new ArrayList<>();
-    factories.add(call -> new ConnectionInterceptor(registry, name(OkHttpClient.class, this.name)));
+    factories.add(call -> requestListener);
+    factories.add(call -> new ConnectionTimingAnalyzer(registry, name(OkHttpClient.class, this.name)));
     final EventListener.Factory rawFactory = rawClient.eventListenerFactory();
     if (rawFactory != null){
       factories.add(rawFactory);
