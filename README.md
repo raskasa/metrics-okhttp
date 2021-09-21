@@ -1,6 +1,11 @@
 Metrics Integration for OkHttp
 ==============================
 
+> As of September 2021, this project's maintainer, @raskasa, has not been able
+> to use this project in production for a number of years.  As a result, active
+> development has stalled; it will likely remain stalled moving forward unless
+> the opportunity arises again for the maintainer to use it in production.
+
 An [OkHttp][okhttp] HTTP client wrapper providing [Metrics][metrics]
 instrumentation of connection pools, request durations and rates, and other
 useful information.
