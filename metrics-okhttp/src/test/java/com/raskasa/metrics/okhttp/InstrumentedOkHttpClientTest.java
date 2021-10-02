@@ -229,6 +229,64 @@ public final class InstrumentedOkHttpClientTest {
     resp2.body().close();
   }
 
+  @Test public void connectionInterceptorIsInstrumented() throws Exception {
+    server.enqueue(new MockResponse().setBody("one"));
+    server.enqueue(new MockResponse().setBody("two"));
+    HttpUrl baseUrl = server.url("/");
+
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
+
+    assertThat(registry.getMeters()
+            .get(client.metricId("connection-requests"))
+            .getCount())
+            .isEqualTo(0);
+    assertThat(registry.getMeters()
+            .get(client.metricId("connection-failed"))
+            .getCount())
+            .isEqualTo(0);
+    assertThat(registry.getMeters()
+            .get(client.metricId("connection-acquired"))
+            .getCount())
+            .isEqualTo(0);
+    assertThat(registry.getMeters()
+            .get(client.metricId("connection-released"))
+            .getCount())
+            .isEqualTo(0);
+    assertThat(registry.getHistograms()
+            .get(client.metricId("connection-setup")))
+            .isNull();
+
+    Request req1 = new Request.Builder().url(baseUrl).build();
+    Request req2 = new Request.Builder().url(baseUrl).build();
+    Response resp1 = client.newCall(req1).execute();
+    Response resp2 = client.newCall(req2).execute();
+
+    resp1.body().close();
+    resp2.body().close();
+
+    assertThat(registry.getMeters()
+            .get(client.metricId("connection-requests"))
+            .getCount())
+            .isEqualTo(2);
+    assertThat(registry.getMeters()
+            .get(client.metricId("connection-failed"))
+            .getCount())
+            .isEqualTo(0);
+    assertThat(registry.getMeters()
+            .get(client.metricId("connection-acquired"))
+            .getCount())
+            .isEqualTo(2);
+    assertThat(registry.getMeters()
+            .get(client.metricId("connection-released"))
+            .getCount())
+            .isEqualTo(2);
+    assertThat(registry.getHistograms()
+            .get(client.metricId("connection-setup"))
+            .getSnapshot().size())
+            .isEqualTo(2);
+
+  }
+
   @Test public void executorServiceIsInstrumented() throws Exception {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
