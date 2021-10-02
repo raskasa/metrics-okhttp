@@ -13,3 +13,8 @@ jobs:
           java-version: 11
       - name: Run Maven Build
         run: mvn package
+      - name: Publish Snapshots and JavaDocs
+        env:
+          CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
+          CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
+        run: mvn clean source:jar javadoc:jar deploy --settings=".buildscript/settings.xml" -Dmaven.test.skip=true
