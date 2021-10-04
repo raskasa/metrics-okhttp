@@ -26,4 +26,3 @@ final class WrappedEventListenerFactory implements EventListener.Factory {
         return new WrappedEventListener(listeners);
     }
 }
-
