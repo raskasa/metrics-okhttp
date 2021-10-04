@@ -32,12 +32,10 @@ public final class InstrumentedOkHttpClients {
   }
 
   /**
-   * Create and instrument an {@link OkHttpClient} and give it the provided
-   * {@code name}.
+   * Create and instrument an {@link OkHttpClient} and give it the provided {@code name}.
    *
-   * <p>{@code name} provides an identifier for the instrumented client.  This
-   * is useful in situations where you have more than one instrumented client
-   * in your application.
+   * <p>{@code name} provides an identifier for the instrumented client. This is useful in
+   * situations where you have more than one instrumented client in your application.
    */
   public static OkHttpClient create(MetricRegistry registry, String name) {
     return new InstrumentedOkHttpClient(registry, new OkHttpClient(), name);
@@ -46,9 +44,8 @@ public final class InstrumentedOkHttpClients {
   /**
    * Instrument the given {@link OkHttpClient} and give it the provided name.
    *
-   * <p>{@code name} provides an identifier for the instrumented client.  This
-   * is useful in situations where you have more than one instrumented client
-   * in your application.
+   * <p>{@code name} provides an identifier for the instrumented client. This is useful in
+   * situations where you have more than one instrumented client in your application.
    */
   public static OkHttpClient create(MetricRegistry registry, OkHttpClient client, String name) {
     return new InstrumentedOkHttpClient(registry, client, name);

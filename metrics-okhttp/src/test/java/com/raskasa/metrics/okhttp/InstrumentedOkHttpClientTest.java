@@ -15,6 +15,9 @@
  */
 package com.raskasa.metrics.okhttp;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -39,14 +42,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class InstrumentedOkHttpClientTest {
   private MetricRegistry registry;
   private OkHttpClient rawClient;
 
-  @Before public void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     registry = new MetricRegistry();
     rawClient = new OkHttpClient();
   }
@@ -54,120 +55,114 @@ public final class InstrumentedOkHttpClientTest {
   @Rule public MockWebServer server = new MockWebServer();
   @Rule public TemporaryFolder cacheRule = new TemporaryFolder();
 
-  @Test public void syncNetworkRequestsAreInstrumented() throws IOException {
-    MockResponse mockResponse = new MockResponse()
-        .addHeader("Cache-Control:public, max-age=31536000")
-        .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
-        .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
-        .setBody("one");
+  @Test
+  public void syncNetworkRequestsAreInstrumented() throws IOException {
+    MockResponse mockResponse =
+        new MockResponse()
+            .addHeader("Cache-Control:public, max-age=31536000")
+            .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
+            .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
+            .setBody("one");
     server.enqueue(mockResponse);
     HttpUrl baseUrl = server.url("/");
 
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
-    assertThat(registry.getMeters()
-        .get(client.metricId("network-requests-submitted"))
-        .getCount())
+    assertThat(registry.getMeters().get(client.metricId("network-requests-submitted")).getCount())
         .isEqualTo(0);
-    assertThat(registry.getCounters()
-        .get(client.metricId("network-requests-running"))
-        .getCount())
+    assertThat(registry.getCounters().get(client.metricId("network-requests-running")).getCount())
         .isEqualTo(0);
-    assertThat(registry.getMeters()
-        .get(client.metricId("network-requests-completed"))
-        .getCount())
+    assertThat(registry.getMeters().get(client.metricId("network-requests-completed")).getCount())
         .isEqualTo(0);
-    assertThat(registry.getTimers()
-        .get(client.metricId("network-requests-duration"))
-        .getCount())
+    assertThat(registry.getTimers().get(client.metricId("network-requests-duration")).getCount())
         .isEqualTo(0);
 
     Request request = new Request.Builder().url(baseUrl).build();
 
     try (Response response = client.newCall(request).execute()) {
-      assertThat(registry.getMeters()
-          .get(client.metricId("network-requests-submitted"))
-          .getCount())
+      assertThat(registry.getMeters().get(client.metricId("network-requests-submitted")).getCount())
           .isEqualTo(1);
-      assertThat(registry.getCounters()
-          .get(client.metricId("network-requests-running"))
-          .getCount())
+      assertThat(registry.getCounters().get(client.metricId("network-requests-running")).getCount())
           .isEqualTo(0);
-      assertThat(registry.getMeters()
-          .get(client.metricId("network-requests-completed"))
-          .getCount())
+      assertThat(registry.getMeters().get(client.metricId("network-requests-completed")).getCount())
           .isEqualTo(1);
-      assertThat(registry.getTimers()
-          .get(client.metricId("network-requests-duration"))
-          .getCount())
+      assertThat(registry.getTimers().get(client.metricId("network-requests-duration")).getCount())
           .isEqualTo(1);
     }
   }
 
-  @Test public void aSyncNetworkRequestsAreInstrumented() {
-    MockResponse mockResponse = new MockResponse()
-        .addHeader("Cache-Control:public, max-age=31536000")
-        .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
-        .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
-        .setBody("one");
+  @Test
+  public void aSyncNetworkRequestsAreInstrumented() {
+    MockResponse mockResponse =
+        new MockResponse()
+            .addHeader("Cache-Control:public, max-age=31536000")
+            .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
+            .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
+            .setBody("one");
     server.enqueue(mockResponse);
     HttpUrl baseUrl = server.url("/");
 
-    final InstrumentedOkHttpClient client =
-        new InstrumentedOkHttpClient(registry, rawClient, null);
+    final InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
-    assertThat(registry.getMeters()
-        .get(client.metricId("network-requests-submitted"))
-        .getCount())
+    assertThat(registry.getMeters().get(client.metricId("network-requests-submitted")).getCount())
         .isEqualTo(0);
-    assertThat(registry.getCounters()
-        .get(client.metricId("network-requests-running"))
-        .getCount())
+    assertThat(registry.getCounters().get(client.metricId("network-requests-running")).getCount())
         .isEqualTo(0);
-    assertThat(registry.getMeters()
-        .get(client.metricId("network-requests-completed"))
-        .getCount())
+    assertThat(registry.getMeters().get(client.metricId("network-requests-completed")).getCount())
         .isEqualTo(0);
-    assertThat(registry.getTimers()
-        .get(client.metricId("network-requests-duration"))
-        .getCount())
+    assertThat(registry.getTimers().get(client.metricId("network-requests-duration")).getCount())
         .isEqualTo(0);
 
     final Request request = new Request.Builder().url(baseUrl).build();
 
-    client.newCall(request).enqueue(new Callback() {
-      @Override public void onFailure(Call call, IOException e) {
-        fail();
-      }
+    client
+        .newCall(request)
+        .enqueue(
+            new Callback() {
+              @Override
+              public void onFailure(Call call, IOException e) {
+                fail();
+              }
 
-      @Override public void onResponse(Call call, Response response) throws IOException {
-        assertThat(registry.getMeters()
-            .get(client.metricId("network-requests-submitted"))
-            .getCount())
-            .isEqualTo(1);
-        assertThat(registry.getCounters()
-            .get(client.metricId("network-requests-running"))
-            .getCount())
-            .isEqualTo(0);
-        assertThat(registry.getMeters()
-            .get(client.metricId("network-requests-completed"))
-            .getCount())
-            .isEqualTo(1);
-        assertThat(registry.getTimers()
-            .get(client.metricId("network-requests-duration"))
-            .getCount())
-            .isEqualTo(1);
-        response.body().close();
-      }
-    });
+              @Override
+              public void onResponse(Call call, Response response) throws IOException {
+                assertThat(
+                        registry
+                            .getMeters()
+                            .get(client.metricId("network-requests-submitted"))
+                            .getCount())
+                    .isEqualTo(1);
+                assertThat(
+                        registry
+                            .getCounters()
+                            .get(client.metricId("network-requests-running"))
+                            .getCount())
+                    .isEqualTo(0);
+                assertThat(
+                        registry
+                            .getMeters()
+                            .get(client.metricId("network-requests-completed"))
+                            .getCount())
+                    .isEqualTo(1);
+                assertThat(
+                        registry
+                            .getTimers()
+                            .get(client.metricId("network-requests-duration"))
+                            .getCount())
+                    .isEqualTo(1);
+                response.body().close();
+              }
+            });
   }
 
-  @Test public void httpCacheIsInstrumented() throws Exception {
-    MockResponse mockResponse = new MockResponse()
-        .addHeader("Cache-Control:public, max-age=31536000")
-        .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
-        .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
-        .setBody("one");
+  @Test
+  public void httpCacheIsInstrumented() throws Exception {
+    MockResponse mockResponse =
+        new MockResponse()
+            .addHeader("Cache-Control:public, max-age=31536000")
+            .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
+            .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
+            .setBody("one");
     server.enqueue(mockResponse);
     HttpUrl baseUrl = server.url("/");
 
@@ -175,40 +170,31 @@ public final class InstrumentedOkHttpClientTest {
     rawClient = rawClient.newBuilder().cache(cache).build();
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
-    assertThat(registry.getGauges()
-        .get(client.metricId("cache-max-size"))
-        .getValue())
+    assertThat(registry.getGauges().get(client.metricId("cache-max-size")).getValue())
         .isEqualTo(Long.MAX_VALUE);
-    assertThat(registry.getGauges()
-        .get(client.metricId("cache-current-size"))
-        .getValue())
+    assertThat(registry.getGauges().get(client.metricId("cache-current-size")).getValue())
         .isEqualTo(0L);
 
     Request request = new Request.Builder().url(baseUrl).build();
     Response response = client.newCall(request).execute();
 
-    assertThat(registry.getGauges()
-        .get(client.metricId("cache-current-size"))
-        .getValue())
+    assertThat(registry.getGauges().get(client.metricId("cache-current-size")).getValue())
         .isEqualTo(rawClient.cache().size());
 
     response.body().close();
   }
 
-  @Test public void connectionPoolIsInstrumented() throws Exception {
+  @Test
+  public void connectionPoolIsInstrumented() throws Exception {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
-    assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-total-count"))
-        .getValue())
+    assertThat(registry.getGauges().get(client.metricId("connection-pool-total-count")).getValue())
         .isEqualTo(0);
-    assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-idle-count"))
-        .getValue())
+    assertThat(registry.getGauges().get(client.metricId("connection-pool-idle-count")).getValue())
         .isEqualTo(0);
 
     Request req1 = new Request.Builder().url(baseUrl).build();
@@ -216,45 +202,32 @@ public final class InstrumentedOkHttpClientTest {
     Response resp1 = client.newCall(req1).execute();
     Response resp2 = client.newCall(req2).execute();
 
-    assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-total-count"))
-        .getValue())
+    assertThat(registry.getGauges().get(client.metricId("connection-pool-total-count")).getValue())
         .isEqualTo(2);
-    assertThat(registry.getGauges()
-        .get(client.metricId("connection-pool-idle-count"))
-        .getValue())
+    assertThat(registry.getGauges().get(client.metricId("connection-pool-idle-count")).getValue())
         .isEqualTo(0);
 
     resp1.body().close();
     resp2.body().close();
   }
 
-  @Test public void connectionInterceptorIsInstrumented() throws Exception {
+  @Test
+  public void connectionInterceptorIsInstrumented() throws Exception {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
-    assertThat(registry.getMeters()
-            .get(client.metricId("connection-requests"))
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getMeters()
-            .get(client.metricId("connection-failed"))
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getMeters()
-            .get(client.metricId("connection-acquired"))
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getMeters()
-            .get(client.metricId("connection-released"))
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getHistograms()
-            .get(client.metricId("connection-setup")))
-            .isNull();
+    assertThat(registry.getMeters().get(client.metricId("connection-requests")).getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters().get(client.metricId("connection-failed")).getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters().get(client.metricId("connection-acquired")).getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters().get(client.metricId("connection-released")).getCount())
+        .isEqualTo(0);
+    assertThat(registry.getHistograms().get(client.metricId("connection-setup"))).isNull();
 
     Request req1 = new Request.Builder().url(baseUrl).build();
     Request req2 = new Request.Builder().url(baseUrl).build();
@@ -264,47 +237,36 @@ public final class InstrumentedOkHttpClientTest {
     resp1.body().close();
     resp2.body().close();
 
-    assertThat(registry.getMeters()
-            .get(client.metricId("connection-requests"))
-            .getCount())
-            .isEqualTo(2);
-    assertThat(registry.getMeters()
-            .get(client.metricId("connection-failed"))
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getMeters()
-            .get(client.metricId("connection-acquired"))
-            .getCount())
-            .isEqualTo(2);
-    assertThat(registry.getMeters()
-            .get(client.metricId("connection-released"))
-            .getCount())
-            .isEqualTo(2);
-    assertThat(registry.getHistograms()
-            .get(client.metricId("connection-setup"))
-            .getSnapshot().size())
-            .isEqualTo(2);
-
+    assertThat(registry.getMeters().get(client.metricId("connection-requests")).getCount())
+        .isEqualTo(2);
+    assertThat(registry.getMeters().get(client.metricId("connection-failed")).getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters().get(client.metricId("connection-acquired")).getCount())
+        .isEqualTo(2);
+    assertThat(registry.getMeters().get(client.metricId("connection-released")).getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry.getHistograms().get(client.metricId("connection-setup")).getSnapshot().size())
+        .isEqualTo(2);
   }
 
-  @Test public void executorServiceIsInstrumented() throws Exception {
+  @Test
+  public void executorServiceIsInstrumented() throws Exception {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
     // Force the requests to execute on this unit tests thread.
-    rawClient = rawClient.newBuilder()
-        .dispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()))
-        .build();
+    rawClient =
+        rawClient
+            .newBuilder()
+            .dispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()))
+            .build();
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
-    assertThat(registry.getMeters()
-        .get(client.metricId("network-requests-submitted"))
-        .getCount())
+    assertThat(registry.getMeters().get(client.metricId("network-requests-submitted")).getCount())
         .isEqualTo(0);
-    assertThat(registry.getMeters()
-        .get(client.metricId("network-requests-completed"))
-        .getCount())
+    assertThat(registry.getMeters().get(client.metricId("network-requests-completed")).getCount())
         .isEqualTo(0);
 
     Request req1 = new Request.Builder().url(baseUrl).build();
@@ -312,17 +274,14 @@ public final class InstrumentedOkHttpClientTest {
     client.newCall(req1).enqueue(new TestCallback());
     client.newCall(req2).enqueue(new TestCallback());
 
-    assertThat(registry.getMeters()
-        .get(client.metricId("network-requests-submitted"))
-        .getCount())
+    assertThat(registry.getMeters().get(client.metricId("network-requests-submitted")).getCount())
         .isEqualTo(2);
-    assertThat(registry.getMeters()
-        .get(client.metricId("network-requests-completed"))
-        .getCount())
+    assertThat(registry.getMeters().get(client.metricId("network-requests-completed")).getCount())
         .isEqualTo(2);
   }
 
-  @Test public void providedNameUsedInMetricId() {
+  @Test
+  public void providedNameUsedInMetricId() {
     String prefix = "custom";
     String baseId = "network-requests-submitted";
 
@@ -335,9 +294,8 @@ public final class InstrumentedOkHttpClientTest {
   }
 
   /**
-   * @param delta the offset from the current date to use. Negative
-   * values yield dates in the past; positive values yield dates in the
-   * future.
+   * @param delta the offset from the current date to use. Negative values yield dates in the past;
+   *     positive values yield dates in the future.
    */
   private String formatDate(long delta, TimeUnit timeUnit) {
     return formatDate(new Date(System.currentTimeMillis() + timeUnit.toMillis(delta)));
@@ -350,11 +308,11 @@ public final class InstrumentedOkHttpClientTest {
   }
 
   private static final class TestCallback implements Callback {
-    @Override public void onFailure(Call call, IOException e) {
+    @Override
+    public void onFailure(Call call, IOException e) {}
 
-    }
-
-    @Override public void onResponse(Call call, Response response) throws IOException {
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
       response.body().close();
     }
   }

@@ -9,9 +9,8 @@ import okhttp3.Interceptor;
 import okhttp3.Response;
 
 /**
- * An {@link Interceptor} that monitors the number of submitted, running, and
- * completed network requests.  Also, keeps a {@link Timer} for the request
- * duration.
+ * An {@link Interceptor} that monitors the number of submitted, running, and completed network
+ * requests. Also, keeps a {@link Timer} for the request duration.
  */
 final class InstrumentedInterceptor implements Interceptor {
   private final Meter submitted;
@@ -26,7 +25,8 @@ final class InstrumentedInterceptor implements Interceptor {
     this.duration = registry.timer(MetricRegistry.name(name, "network-requests-duration"));
   }
 
-  @Override public Response intercept(Chain chain) throws IOException {
+  @Override
+  public Response intercept(Chain chain) throws IOException {
     submitted.mark();
     running.inc();
     final Timer.Context context = duration.time();
