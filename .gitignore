@@ -22,9 +22,4 @@ classes
 
 obj
 
-.idea
-target
-*.ipr
-*.iml
-*.iws
 .DS_Store
