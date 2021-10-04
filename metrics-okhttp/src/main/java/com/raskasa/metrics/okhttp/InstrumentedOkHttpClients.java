@@ -17,18 +17,19 @@ package com.raskasa.metrics.okhttp;
 
 import com.codahale.metrics.MetricRegistry;
 import okhttp3.OkHttpClient;
+import static com.raskasa.metrics.okhttp.InstrumentedOkHttpClient.InstrumentedOkHttpClientBuilder;
 
 /** Static factory methods for instrumenting an {@link OkHttpClient}. */
 public final class InstrumentedOkHttpClients {
 
   /** Create and instrument an {@link OkHttpClient}. */
   public static OkHttpClient create(MetricRegistry registry) {
-    return new InstrumentedOkHttpClient(registry, new OkHttpClient(), null);
+    return InstrumentedOkHttpClientBuilder.newBuilder(registry, null).build();
   }
 
   /** Instrument the given {@link OkHttpClient}. */
   public static OkHttpClient create(MetricRegistry registry, OkHttpClient client) {
-    return new InstrumentedOkHttpClient(registry, client, null);
+    return InstrumentedOkHttpClientBuilder.newBuilder(registry, null).withClient(client).build();
   }
 
   /**
@@ -40,7 +41,7 @@ public final class InstrumentedOkHttpClients {
    * in your application.
    */
   public static OkHttpClient create(MetricRegistry registry, String name) {
-    return new InstrumentedOkHttpClient(registry, new OkHttpClient(), name);
+    return InstrumentedOkHttpClientBuilder.newBuilder(registry, name).build();
   }
 
   /**
@@ -51,7 +52,7 @@ public final class InstrumentedOkHttpClients {
    * in your application.
    */
   public static OkHttpClient create(MetricRegistry registry, OkHttpClient client, String name) {
-    return new InstrumentedOkHttpClient(registry, client, name);
+    return InstrumentedOkHttpClientBuilder.newBuilder(registry, name).withClient(client).build();
   }
 
   private InstrumentedOkHttpClients() {
