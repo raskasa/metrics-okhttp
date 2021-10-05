@@ -15,22 +15,24 @@
  */
 package com.raskasa.metrics.okhttp;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
 import com.codahale.metrics.MetricRegistry;
 import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-
 public final class InstrumentedOkHttpClientsTest {
   private MetricRegistry registry;
 
-  @Before public void setUp() {
+  @Before
+  public void setUp() {
     registry = mock(MetricRegistry.class);
   }
 
-  @Test public void instrumentDefaultClient() {
+  @Test
+  public void instrumentDefaultClient() {
     OkHttpClient client = InstrumentedOkHttpClients.create(registry);
 
     // The connection, read, and write timeouts are the only configurations applied by default.
@@ -39,7 +41,8 @@ public final class InstrumentedOkHttpClientsTest {
     assertThat(client.writeTimeoutMillis()).isEqualTo(10_000);
   }
 
-  @Test public void instrumentAndNameDefaultClient() {
+  @Test
+  public void instrumentAndNameDefaultClient() {
     OkHttpClient client = InstrumentedOkHttpClients.create(registry, "custom");
 
     // The connection, read, and write timeouts are the only configurations applied by default.
@@ -48,13 +51,15 @@ public final class InstrumentedOkHttpClientsTest {
     assertThat(client.writeTimeoutMillis()).isEqualTo(10_000);
   }
 
-  @Test public void instrumentProvidedClient() {
+  @Test
+  public void instrumentProvidedClient() {
     OkHttpClient rawClient = new OkHttpClient();
     OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient);
     assertThatClientsAreEqual(client, rawClient);
   }
 
-  @Test public void instrumentAndNameProvidedClient() {
+  @Test
+  public void instrumentAndNameProvidedClient() {
     OkHttpClient rawClient = new OkHttpClient();
     OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient, "custom");
     assertThatClientsAreEqual(client, rawClient);

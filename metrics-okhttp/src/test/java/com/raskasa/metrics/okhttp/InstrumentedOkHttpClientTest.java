@@ -15,6 +15,10 @@
  */
 package com.raskasa.metrics.okhttp;
 
+import static com.raskasa.metrics.okhttp.InstrumentedOkHttpClient.InstrumentedOkHttpClientBuilder;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -39,15 +43,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-import static com.raskasa.metrics.okhttp.InstrumentedOkHttpClient.InstrumentedOkHttpClientBuilder;
-
 public final class InstrumentedOkHttpClientTest {
   private MetricRegistry registry;
   private OkHttpClient rawClient;
 
-  @Before public void setUp() {
+  @Before
+  public void setUp() {
     registry = new MetricRegistry();
     rawClient = new OkHttpClient();
   }
@@ -55,165 +56,170 @@ public final class InstrumentedOkHttpClientTest {
   @Rule public MockWebServer server = new MockWebServer();
   @Rule public TemporaryFolder cacheRule = new TemporaryFolder();
 
-  @Test public void syncNetworkRequestsAreInstrumented() throws IOException {
-    MockResponse mockResponse = new MockResponse()
-        .addHeader("Cache-Control:public, max-age=31536000")
-        .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
-        .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
-        .setBody("one");
+  @Test
+  public void syncNetworkRequestsAreInstrumented() throws IOException {
+    MockResponse mockResponse =
+        new MockResponse()
+            .addHeader("Cache-Control:public, max-age=31536000")
+            .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
+            .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
+            .setBody("one");
     server.enqueue(mockResponse);
     HttpUrl baseUrl = server.url("/");
 
-    InstrumentedOkHttpClient client =  InstrumentedOkHttpClientBuilder.newBuilder(registry, null)
-            .withClient(rawClient)
-            .build();
-    assertThat(registry.getMeters()
-        .get("okhttp3.OkHttpClient.network-requests-submitted")
-        .getCount())
+    InstrumentedOkHttpClient client =
+        InstrumentedOkHttpClientBuilder.newBuilder(registry, null).withClient(rawClient).build();
+    assertThat(
+            registry.getMeters().get("okhttp3.OkHttpClient.network-requests-submitted").getCount())
         .isEqualTo(0);
-    assertThat(registry.getCounters()
-        .get("okhttp3.OkHttpClient.network-requests-running")
-        .getCount())
+    assertThat(
+            registry.getCounters().get("okhttp3.OkHttpClient.network-requests-running").getCount())
         .isEqualTo(0);
-    assertThat(registry.getMeters()
-        .get("okhttp3.OkHttpClient.network-requests-completed")
-        .getCount())
+    assertThat(
+            registry.getMeters().get("okhttp3.OkHttpClient.network-requests-completed").getCount())
         .isEqualTo(0);
-    assertThat(registry.getTimers()
-        .get("okhttp3.OkHttpClient.network-requests-duration")
-        .getCount())
+    assertThat(
+            registry.getTimers().get("okhttp3.OkHttpClient.network-requests-duration").getCount())
         .isEqualTo(0);
 
     Request request = new Request.Builder().url(baseUrl).build();
 
     try (Response ignored = client.newCall(request).execute()) {
-      assertThat(registry.getMeters()
-          .get("okhttp3.OkHttpClient.network-requests-submitted")
-          .getCount())
+      assertThat(
+              registry
+                  .getMeters()
+                  .get("okhttp3.OkHttpClient.network-requests-submitted")
+                  .getCount())
           .isEqualTo(1);
-      assertThat(registry.getCounters()
-          .get("okhttp3.OkHttpClient.network-requests-running")
-          .getCount())
+      assertThat(
+              registry
+                  .getCounters()
+                  .get("okhttp3.OkHttpClient.network-requests-running")
+                  .getCount())
           .isEqualTo(0);
-      assertThat(registry.getMeters()
-          .get("okhttp3.OkHttpClient.network-requests-completed")
-          .getCount())
+      assertThat(
+              registry
+                  .getMeters()
+                  .get("okhttp3.OkHttpClient.network-requests-completed")
+                  .getCount())
           .isEqualTo(1);
-      assertThat(registry.getTimers()
-          .get("okhttp3.OkHttpClient.network-requests-duration")
-          .getCount())
+      assertThat(
+              registry.getTimers().get("okhttp3.OkHttpClient.network-requests-duration").getCount())
           .isEqualTo(1);
     }
   }
 
-  @Test public void aSyncNetworkRequestsAreInstrumented() {
-    MockResponse mockResponse = new MockResponse()
-        .addHeader("Cache-Control:public, max-age=31536000")
-        .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
-        .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
-        .setBody("one");
+  @Test
+  public void aSyncNetworkRequestsAreInstrumented() {
+    MockResponse mockResponse =
+        new MockResponse()
+            .addHeader("Cache-Control:public, max-age=31536000")
+            .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
+            .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
+            .setBody("one");
     server.enqueue(mockResponse);
     HttpUrl baseUrl = server.url("/");
 
-    InstrumentedOkHttpClient client = InstrumentedOkHttpClientBuilder.newBuilder(registry, null)
-            .withClient(rawClient)
-            .build();
-    assertThat(registry.getMeters()
-        .get("okhttp3.OkHttpClient.network-requests-submitted")
-        .getCount())
+    final InstrumentedOkHttpClient client =
+        InstrumentedOkHttpClientBuilder.newBuilder(registry, null).withClient(rawClient).build();
+    assertThat(
+            registry.getMeters().get("okhttp3.OkHttpClient.network-requests-submitted").getCount())
         .isEqualTo(0);
-    assertThat(registry.getCounters()
-        .get("okhttp3.OkHttpClient.network-requests-running")
-        .getCount())
+    assertThat(
+            registry.getCounters().get("okhttp3.OkHttpClient.network-requests-running").getCount())
         .isEqualTo(0);
-    assertThat(registry.getMeters()
-        .get("okhttp3.OkHttpClient.network-requests-completed")
-        .getCount())
+    assertThat(
+            registry.getMeters().get("okhttp3.OkHttpClient.network-requests-completed").getCount())
         .isEqualTo(0);
-    assertThat(registry.getTimers()
-        .get("okhttp3.OkHttpClient.network-requests-duration")
-        .getCount())
+    assertThat(
+            registry.getTimers().get("okhttp3.OkHttpClient.network-requests-duration").getCount())
         .isEqualTo(0);
 
     final Request request = new Request.Builder().url(baseUrl).build();
 
-    client.newCall(request).enqueue(new Callback() {
-      @Override public void onFailure(Call call, IOException e) {
-        fail();
-      }
+    client
+        .newCall(request)
+        .enqueue(
+            new Callback() {
+              @Override
+              public void onFailure(Call call, IOException e) {
+                fail();
+              }
 
-      @Override public void onResponse(Call call, Response response) {
-        assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.network-requests-submitted")
-            .getCount())
-            .isEqualTo(1);
-        assertThat(registry.getCounters()
-            .get("okhttp3.OkHttpClient.network-requests-running")
-            .getCount())
-            .isEqualTo(0);
-        assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.network-requests-completed")
-            .getCount())
-            .isEqualTo(1);
-        assertThat(registry.getTimers()
-            .get("okhttp3.OkHttpClient.network-requests-duration")
-            .getCount())
-            .isEqualTo(1);
-        response.body().close();
-      }
-    });
+              @Override
+              public void onResponse(Call call, Response response) {
+                assertThat(
+                        registry
+                            .getMeters()
+                            .get("okhttp3.OkHttpClient.network-requests-submitted")
+                            .getCount())
+                    .isEqualTo(1);
+                assertThat(
+                        registry
+                            .getCounters()
+                            .get("okhttp3.OkHttpClient.network-requests-running")
+                            .getCount())
+                    .isEqualTo(0);
+                assertThat(
+                        registry
+                            .getMeters()
+                            .get("okhttp3.OkHttpClient.network-requests-completed")
+                            .getCount())
+                    .isEqualTo(1);
+                assertThat(
+                        registry
+                            .getTimers()
+                            .get("okhttp3.OkHttpClient.network-requests-duration")
+                            .getCount())
+                    .isEqualTo(1);
+                response.body().close();
+              }
+            });
   }
 
-  @Test public void httpCacheIsInstrumented() throws Exception {
-    MockResponse mockResponse = new MockResponse()
-        .addHeader("Cache-Control:public, max-age=31536000")
-        .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
-        .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
-        .setBody("one");
+  @Test
+  public void httpCacheIsInstrumented() throws Exception {
+    MockResponse mockResponse =
+        new MockResponse()
+            .addHeader("Cache-Control:public, max-age=31536000")
+            .addHeader("Last-Modified: " + formatDate(-1, TimeUnit.HOURS))
+            .addHeader("Expires: " + formatDate(1, TimeUnit.HOURS))
+            .setBody("one");
     server.enqueue(mockResponse);
     HttpUrl baseUrl = server.url("/");
 
     Cache cache = new Cache(cacheRule.getRoot(), Long.MAX_VALUE);
     rawClient = rawClient.newBuilder().cache(cache).build();
-    InstrumentedOkHttpClient client =  InstrumentedOkHttpClientBuilder.newBuilder(registry, null)
-            .withClient(rawClient)
-            .build();
-    assertThat(registry.getGauges()
-        .get("okhttp3.OkHttpClient.cache-max-size")
-        .getValue())
+    InstrumentedOkHttpClient client =
+        InstrumentedOkHttpClientBuilder.newBuilder(registry, null).withClient(rawClient).build();
+    assertThat(registry.getGauges().get("okhttp3.OkHttpClient.cache-max-size").getValue())
         .isEqualTo(Long.MAX_VALUE);
-    assertThat(registry.getGauges()
-        .get("okhttp3.OkHttpClient.cache-current-size")
-        .getValue())
+    assertThat(registry.getGauges().get("okhttp3.OkHttpClient.cache-current-size").getValue())
         .isEqualTo(0L);
 
     Request request = new Request.Builder().url(baseUrl).build();
     Response response = client.newCall(request).execute();
 
-    assertThat(registry.getGauges()
-        .get("okhttp3.OkHttpClient.cache-current-size")
-        .getValue())
+    assertThat(registry.getGauges().get("okhttp3.OkHttpClient.cache-current-size").getValue())
         .isEqualTo(rawClient.cache().size());
 
     response.body().close();
   }
 
-  @Test public void connectionPoolIsInstrumented() throws Exception {
+  @Test
+  public void connectionPoolIsInstrumented() throws Exception {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
-    InstrumentedOkHttpClient client =  InstrumentedOkHttpClientBuilder.newBuilder(registry, null)
-            .withClient(rawClient)
-            .build();
+    InstrumentedOkHttpClient client =
+        InstrumentedOkHttpClientBuilder.newBuilder(registry, null).withClient(rawClient).build();
 
-    assertThat(registry.getGauges()
-        .get("okhttp3.OkHttpClient.connection-pool-total-count")
-        .getValue())
+    assertThat(
+            registry.getGauges().get("okhttp3.OkHttpClient.connection-pool-total-count").getValue())
         .isEqualTo(0);
-    assertThat(registry.getGauges()
-        .get("okhttp3.OkHttpClient.connection-pool-idle-count")
-        .getValue())
+    assertThat(
+            registry.getGauges().get("okhttp3.OkHttpClient.connection-pool-idle-count").getValue())
         .isEqualTo(0);
 
     Request req1 = new Request.Builder().url(baseUrl).build();
@@ -221,47 +227,35 @@ public final class InstrumentedOkHttpClientTest {
     Response resp1 = client.newCall(req1).execute();
     Response resp2 = client.newCall(req2).execute();
 
-    assertThat(registry.getGauges()
-        .get("okhttp3.OkHttpClient.connection-pool-total-count")
-        .getValue())
+    assertThat(
+            registry.getGauges().get("okhttp3.OkHttpClient.connection-pool-total-count").getValue())
         .isEqualTo(2);
-    assertThat(registry.getGauges()
-        .get("okhttp3.OkHttpClient.connection-pool-idle-count")
-        .getValue())
+    assertThat(
+            registry.getGauges().get("okhttp3.OkHttpClient.connection-pool-idle-count").getValue())
         .isEqualTo(0);
 
     resp1.body().close();
     resp2.body().close();
   }
 
-  @Test public void connectionInterceptorIsInstrumented() throws Exception {
+  @Test
+  public void connectionInterceptorIsInstrumented() throws Exception {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
-    InstrumentedOkHttpClient client =  InstrumentedOkHttpClientBuilder.newBuilder(registry, null)
-            .withClient(rawClient)
-            .build();
+    InstrumentedOkHttpClient client =
+        InstrumentedOkHttpClientBuilder.newBuilder(registry, null).withClient(rawClient).build();
 
-    assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.connection-requests")
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.connection-failed")
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.connection-acquired")
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.connection-released")
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getHistograms()
-            .get("okhttp3.OkHttpClient.connection-setup"))
-            .isNull();
+    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.connection-requests").getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.connection-failed").getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.connection-acquired").getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.connection-released").getCount())
+        .isEqualTo(0);
+    assertThat(registry.getHistograms().get("okhttp3.OkHttpClient.connection-setup")).isNull();
 
     Request req1 = new Request.Builder().url(baseUrl).build();
     Request req2 = new Request.Builder().url(baseUrl).build();
@@ -271,50 +265,44 @@ public final class InstrumentedOkHttpClientTest {
     resp1.body().close();
     resp2.body().close();
 
-    assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.connection-requests")
-            .getCount())
-            .isEqualTo(2);
-    assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.connection-failed")
-            .getCount())
-            .isEqualTo(0);
-    assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.connection-acquired")
-            .getCount())
-            .isEqualTo(2);
-    assertThat(registry.getMeters()
-            .get("okhttp3.OkHttpClient.connection-released")
-            .getCount())
-            .isEqualTo(2);
-    assertThat(registry.getHistograms()
-            .get("okhttp3.OkHttpClient.connection-setup")
-            .getSnapshot().size())
-            .isEqualTo(2);
-
+    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.connection-requests").getCount())
+        .isEqualTo(2);
+    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.connection-failed").getCount())
+        .isEqualTo(0);
+    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.connection-acquired").getCount())
+        .isEqualTo(2);
+    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.connection-released").getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getHistograms()
+                .get("okhttp3.OkHttpClient.connection-setup")
+                .getSnapshot()
+                .size())
+        .isEqualTo(2);
   }
 
-  @Test public void executorServiceIsInstrumented() {
+  @Test
+  public void executorServiceIsInstrumented() {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
     // Force the requests to execute on this unit tests thread.
-    rawClient = rawClient.newBuilder()
-        .dispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()))
-        .build();
-
-    InstrumentedOkHttpClient client =  InstrumentedOkHttpClientBuilder.newBuilder(registry, null)
-            .withClient(rawClient)
+    rawClient =
+        rawClient
+            .newBuilder()
+            .dispatcher(new Dispatcher(MoreExecutors.newDirectExecutorService()))
             .build();
 
-    assertThat(registry.getMeters()
-        .get("okhttp3.OkHttpClient.network-requests-submitted")
-        .getCount())
+    InstrumentedOkHttpClient client =
+        InstrumentedOkHttpClientBuilder.newBuilder(registry, null).withClient(rawClient).build();
+
+    assertThat(
+            registry.getMeters().get("okhttp3.OkHttpClient.network-requests-submitted").getCount())
         .isEqualTo(0);
-    assertThat(registry.getMeters()
-        .get("okhttp3.OkHttpClient.network-requests-completed")
-        .getCount())
+    assertThat(
+            registry.getMeters().get("okhttp3.OkHttpClient.network-requests-completed").getCount())
         .isEqualTo(0);
 
     Request req1 = new Request.Builder().url(baseUrl).build();
@@ -322,29 +310,26 @@ public final class InstrumentedOkHttpClientTest {
     client.newCall(req1).enqueue(new TestCallback());
     client.newCall(req2).enqueue(new TestCallback());
 
-    assertThat(registry.getMeters()
-        .get("okhttp3.OkHttpClient.network-requests-submitted")
-        .getCount())
+    assertThat(
+            registry.getMeters().get("okhttp3.OkHttpClient.network-requests-submitted").getCount())
         .isEqualTo(2);
-    assertThat(registry.getMeters()
-        .get("okhttp3.OkHttpClient.network-requests-completed")
-        .getCount())
+    assertThat(
+            registry.getMeters().get("okhttp3.OkHttpClient.network-requests-completed").getCount())
         .isEqualTo(2);
   }
 
-  @Test public void providedNameUsedInMetricId() {
+  @Test
+  public void providedNameUsedInMetricId() {
     String prefix = "custom";
     assertThat(registry.getMeters()).isEmpty();
-    InstrumentedOkHttpClientBuilder.newBuilder(registry, prefix)
-            .withClient(rawClient)
-            .build();
-    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.custom.network-requests-submitted")).isNotNull();
+    InstrumentedOkHttpClientBuilder.newBuilder(registry, prefix).withClient(rawClient).build();
+    assertThat(registry.getMeters().get("okhttp3.OkHttpClient.custom.network-requests-submitted"))
+        .isNotNull();
   }
 
   /**
-   * @param delta the offset from the current date to use. Negative
-   * values yield dates in the past; positive values yield dates in the
-   * future.
+   * @param delta the offset from the current date to use. Negative values yield dates in the past;
+   *     positive values yield dates in the future.
    */
   private String formatDate(long delta, TimeUnit timeUnit) {
     return formatDate(new Date(System.currentTimeMillis() + timeUnit.toMillis(delta)));
@@ -357,11 +342,11 @@ public final class InstrumentedOkHttpClientTest {
   }
 
   private static final class TestCallback implements Callback {
-    @Override public void onFailure(Call call, IOException e) {
+    @Override
+    public void onFailure(Call call, IOException e) {}
 
-    }
-
-    @Override public void onResponse(Call call, Response response) {
+    @Override
+    public void onResponse(Call call, Response response) {
       response.body().close();
     }
   }
