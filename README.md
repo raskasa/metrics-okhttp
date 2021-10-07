@@ -65,11 +65,6 @@ okhttp3.OkHttpClient.network-requests-completed
 okhttp3.OkHttpClient.network-requests-duration
 okhttp3.OkHttpClient.network-requests-running
 okhttp3.OkHttpClient.network-requests-submitted
-okhttp3.OkHttpClient.connection-requests
-okhttp3.OkHttpClient.connection-failed
-okhttp3.OkHttpClient.connection-acquired
-okhttp3.OkHttpClient.connection-released
-okhttp3.OkHttpClient.connection-setup
 ```
 
 If you provide a custom name for the instrumented client (i.e. `custom-name`),
