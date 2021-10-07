@@ -23,7 +23,6 @@ import com.codahale.metrics.RatioGauge;
 import java.io.IOException;
 import java.net.Proxy;
 import java.net.ProxySelector;
-import java.util.ArrayList;
 import java.util.List;
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
@@ -37,7 +36,6 @@ import okhttp3.ConnectionSpec;
 import okhttp3.CookieJar;
 import okhttp3.Dispatcher;
 import okhttp3.Dns;
-import okhttp3.EventListener;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -61,7 +59,6 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     instrumentHttpCache();
     instrumentConnectionPool();
     instrumentNetworkRequests();
-    instrumentConnectionListener();
   }
 
   /**
@@ -186,24 +183,6 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
             .newBuilder()
             .addNetworkInterceptor(
                 new InstrumentedInterceptor(registry, name(OkHttpClient.class, this.name)))
-            .build();
-  }
-
-  private void instrumentConnectionListener() {
-    final ConnectionRequestCounter requestListener =
-        new ConnectionRequestCounter(registry, name(OkHttpClient.class, this.name));
-    final List<EventListener.Factory> factories = new ArrayList<>();
-    factories.add(call -> requestListener);
-    factories.add(
-        call -> new ConnectionTimingAnalyzer(registry, name(OkHttpClient.class, this.name)));
-    final EventListener.Factory rawFactory = rawClient.eventListenerFactory();
-    if (rawFactory != null) {
-      factories.add(rawFactory);
-    }
-    rawClient =
-        rawClient
-            .newBuilder()
-            .eventListenerFactory(new WrappedEventListenerFactory(factories))
             .build();
   }
 
