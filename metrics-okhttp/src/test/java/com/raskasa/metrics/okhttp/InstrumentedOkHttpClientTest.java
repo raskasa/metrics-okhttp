@@ -31,6 +31,7 @@ import okhttp3.Cache;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Dispatcher;
+import okhttp3.EventListener;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -72,10 +73,6 @@ public final class InstrumentedOkHttpClientTest {
         .isEqualTo(0);
     assertThat(registry.getCounters().get(client.metricId("network-requests-running")).getCount())
         .isEqualTo(0);
-    assertThat(registry.getMeters().get(client.metricId("network-requests-completed")).getCount())
-        .isEqualTo(0);
-    assertThat(registry.getTimers().get(client.metricId("network-requests-duration")).getCount())
-        .isEqualTo(0);
 
     Request request = new Request.Builder().url(baseUrl).build();
 
@@ -84,10 +81,6 @@ public final class InstrumentedOkHttpClientTest {
           .isEqualTo(1);
       assertThat(registry.getCounters().get(client.metricId("network-requests-running")).getCount())
           .isEqualTo(0);
-      assertThat(registry.getMeters().get(client.metricId("network-requests-completed")).getCount())
-          .isEqualTo(1);
-      assertThat(registry.getTimers().get(client.metricId("network-requests-duration")).getCount())
-          .isEqualTo(1);
     }
   }
 
@@ -212,41 +205,90 @@ public final class InstrumentedOkHttpClientTest {
   }
 
   @Test
-  public void connectionInterceptorIsInstrumented() throws Exception {
+  public void eventListenerIsInstrumented() throws Exception {
     server.enqueue(new MockResponse().setBody("one"));
     server.enqueue(new MockResponse().setBody("two"));
     HttpUrl baseUrl = server.url("/");
 
     InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
 
-    assertThat(registry.getMeters().get(client.metricId("connection-requests")).getCount())
-        .isEqualTo(0);
-    assertThat(registry.getMeters().get(client.metricId("connection-failed")).getCount())
-        .isEqualTo(0);
-    assertThat(registry.getMeters().get(client.metricId("connection-acquired")).getCount())
-        .isEqualTo(0);
-    assertThat(registry.getMeters().get(client.metricId("connection-released")).getCount())
-        .isEqualTo(0);
-    assertThat(registry.getHistograms().get(client.metricId("connection-setup"))).isNull();
+    assertThat(registry.getTimers().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "calls-duration"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-start"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-end"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-failed"));
+    assertThat(registry.getTimers().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-duration"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-acquired"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-released"));
 
     Request req1 = new Request.Builder().url(baseUrl).build();
     Request req2 = new Request.Builder().url(baseUrl).build();
     Response resp1 = client.newCall(req1).execute();
     Response resp2 = client.newCall(req2).execute();
 
-    resp1.body().close();
-    resp2.body().close();
-
-    assertThat(registry.getMeters().get(client.metricId("connection-requests")).getCount())
-        .isEqualTo(2);
-    assertThat(registry.getMeters().get(client.metricId("connection-failed")).getCount())
+    assertThat(
+            registry
+                .getTimers()
+                .get(MetricRegistry.name(EventListener.class, "calls-duration"))
+                .getCount())
         .isEqualTo(0);
-    assertThat(registry.getMeters().get(client.metricId("connection-acquired")).getCount())
-        .isEqualTo(2);
-    assertThat(registry.getMeters().get(client.metricId("connection-released")).getCount())
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-start"))
+                .getCount())
         .isEqualTo(2);
     assertThat(
-            registry.getHistograms().get(client.metricId("connection-setup")).getSnapshot().size())
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-end"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-failed"))
+                .getCount())
+        .isEqualTo(0);
+    assertThat(
+            registry
+                .getTimers()
+                .get(MetricRegistry.name(EventListener.class, "connections-duration"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-acquired"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-released"))
+                .getCount())
+        .isEqualTo(0);
+
+    resp1.close();
+    resp2.close();
+
+    assertThat(
+            registry
+                .getTimers()
+                .get(MetricRegistry.name(EventListener.class, "calls-duration"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-released"))
+                .getCount())
         .isEqualTo(2);
   }
 
