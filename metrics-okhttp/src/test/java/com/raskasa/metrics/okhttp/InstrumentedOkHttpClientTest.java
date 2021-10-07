@@ -23,7 +23,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -31,12 +33,15 @@ import okhttp3.Cache;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Dispatcher;
+import okhttp3.EventListener;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import okhttp3.RecordingEventListener;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -209,6 +214,194 @@ public final class InstrumentedOkHttpClientTest {
 
     resp1.body().close();
     resp2.body().close();
+  }
+
+  @Test
+  public void eventListenerIsInstrumented() throws Exception {
+    server.enqueue(new MockResponse().setBody("one"));
+    server.enqueue(new MockResponse().setBody("two"));
+    HttpUrl baseUrl = server.url("/");
+
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, rawClient, null);
+
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "calls-start"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "calls-end"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "calls-failed"));
+    assertThat(registry.getTimers().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "calls-duration"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "dns-start"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "dns-end"));
+    assertThat(registry.getTimers().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "dns-duration"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-start"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-end"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-failed"));
+    assertThat(registry.getTimers().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-duration"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-acquired"));
+    assertThat(registry.getMeters().keySet())
+        .doesNotContain(MetricRegistry.name(EventListener.class, "connections-released"));
+
+    Request req1 = new Request.Builder().url(baseUrl).build();
+    Request req2 = new Request.Builder().url(baseUrl).build();
+    Response resp1 = client.newCall(req1).execute();
+    Response resp2 = client.newCall(req2).execute();
+
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "calls-start"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "calls-end"))
+                .getCount())
+        .isEqualTo(0);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "calls-failed"))
+                .getCount())
+        .isEqualTo(0);
+    assertThat(
+            registry
+                .getTimers()
+                .get(MetricRegistry.name(EventListener.class, "calls-duration"))
+                .getCount())
+        .isEqualTo(0);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "dns-start"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "dns-end"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getTimers()
+                .get(MetricRegistry.name(EventListener.class, "dns-duration"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-start"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-end"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-failed"))
+                .getCount())
+        .isEqualTo(0);
+    assertThat(
+            registry
+                .getTimers()
+                .get(MetricRegistry.name(EventListener.class, "connections-duration"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-acquired"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-released"))
+                .getCount())
+        .isEqualTo(0);
+
+    // Some end/release events don't fire until after the response bodies are closed/consumed.
+    resp1.close();
+    resp2.close();
+
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "calls-start"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "calls-end"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "calls-failed"))
+                .getCount())
+        .isEqualTo(0);
+    assertThat(
+            registry
+                .getTimers()
+                .get(MetricRegistry.name(EventListener.class, "calls-duration"))
+                .getCount())
+        .isEqualTo(2);
+    assertThat(
+            registry
+                .getMeters()
+                .get(MetricRegistry.name(EventListener.class, "connections-released"))
+                .getCount())
+        .isEqualTo(2);
+  }
+
+  @Test
+  public void eventListenerDelegatesSuccessfully() throws Exception {
+    server.enqueue(new MockResponse().setBody("one"));
+    server.enqueue(new MockResponse().setBody("two"));
+    HttpUrl baseUrl = server.url("/");
+
+    RecordingEventListener delegate = new RecordingEventListener();
+    OkHttpClient configureClient = rawClient.newBuilder().eventListener(delegate).build();
+
+    InstrumentedOkHttpClient client = new InstrumentedOkHttpClient(registry, configureClient, null);
+    Request request = new Request.Builder().url(baseUrl).build();
+    Response response = client.newCall(request).execute();
+    response.close();
+
+    List<String> expectedEvents =
+        Arrays.asList(
+            "CallStart",
+            "DnsStart",
+            "DnsEnd",
+            "ConnectStart",
+            "ConnectEnd",
+            "ConnectionAcquired",
+            "RequestHeadersStart",
+            "RequestHeadersEnd",
+            "ResponseHeadersStart",
+            "ResponseHeadersEnd",
+            "ResponseBodyStart",
+            "ResponseBodyEnd",
+            "ConnectionReleased",
+            "CallEnd");
+    Assertions.assertThat(delegate.recordedEventTypes()).isEqualTo(expectedEvents);
   }
 
   @Test

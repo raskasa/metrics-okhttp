@@ -36,6 +36,7 @@ import okhttp3.ConnectionSpec;
 import okhttp3.CookieJar;
 import okhttp3.Dispatcher;
 import okhttp3.Dns;
+import okhttp3.EventListener;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -59,6 +60,7 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
     instrumentHttpCache();
     instrumentConnectionPool();
     instrumentNetworkRequests();
+    instrumentEventListener();
   }
 
   /**
@@ -183,6 +185,17 @@ final class InstrumentedOkHttpClient extends OkHttpClient {
             .newBuilder()
             .addNetworkInterceptor(
                 new InstrumentedInterceptor(registry, name(OkHttpClient.class, this.name)))
+            .build();
+  }
+
+  private void instrumentEventListener() {
+    final EventListener.Factory delegate = this.rawClient.eventListenerFactory();
+    this.rawClient =
+        this.rawClient
+            .newBuilder()
+            .eventListenerFactory(
+                new InstrumentedEventListener.Factory(
+                    this.registry, delegate, name(EventListener.class, this.name)))
             .build();
   }
 
