@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+## Version 0.5.0
+
+_2021-10-08_
+
+* __`EventListener`-based metrics.__  Users now have access to metrics recorded
+through OkHttp's new API for tracking metrics and monitoring HTTP requests’
+size and duration.
+* Updated OkHttp dependency to 3.14.9.
+* Updated Dropwizard Metrics dependency to 4.2.3.
+
 ## Version 0.4.0
 
 _2017-11-10_

@@ -48,6 +48,19 @@ OkHttpClient client = InstrumentedOkHttpClients.create(registry, rawClient, "cus
 An instrumented OkHttp HTTP client provides the following metrics:
 
 ```
+okhttp3.EventListener.calls-duration
+okhttp3.EventListener.calls-end
+okhttp3.EventListener.calls-failed
+okhttp3.EventListener.calls-start
+okhttp3.EventListener.connections-acquired
+okhttp3.EventListener.connections-duration
+okhttp3.EventListener.connections-end
+okhttp3.EventListener.connections-failed
+okhttp3.EventListener.connections-released
+okhttp3.EventListener.connections-start
+okhttp3.EventListener.dns-duration
+okhttp3.EventListener.dns-end
+okhttp3.EventListener.dns-start
 okhttp3.OkHttpClient.cache-request-count
 okhttp3.OkHttpClient.cache-hit-count
 okhttp3.OkHttpClient.cache-network-count
@@ -90,14 +103,14 @@ Download [the latest jar][metrics-okhttp] or depend on Maven:
 <dependency>
   <groupId>com.raskasa.metrics</groupId>
   <artifactId>metrics-okhttp</artifactId>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
 </dependency>
 ```
 
 or Gradle:
 
 ```groovy
-compile 'com.raskasa.metrics:metrics-okhttp:0.4.0'
+compile 'com.raskasa.metrics:metrics-okhttp:0.5.0'
 ```
 
 Snapshots of the development version are available in
